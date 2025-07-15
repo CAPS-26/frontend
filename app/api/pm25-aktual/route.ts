@@ -1,4 +1,3 @@
-// app/pm25-stasiun/proxy/route.ts
 import { NextResponse } from "next/server";
 
 export async function GET() {
