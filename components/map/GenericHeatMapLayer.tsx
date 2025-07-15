@@ -69,6 +69,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
   const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
   const spatialIndexRef = useRef<RBush<RBushItem> | null>(null);
   const interpolatedDataRef = useRef<InterpolatedFeature[]>([]);
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   const handleTodayClick = () => {
     const today = new Date().toISOString().split("T")[0];
@@ -95,6 +96,22 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
     setSelectedDate(newDate);
     if (inputRef.current) {
       inputRef.current.value = newDate;
+    }
+  };
+
+  const handleInfoClick = () => {
+    setShowInfoPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setShowInfoPopup(false);
+  };
+
+  const getInfoContent = () => {
+    if (dataType === "aod") {
+      return "Data AOD merupakan data yang digunakan untuk mengukur tingkat penyerapan atau penghamburan cahaya oleh partikel aerosol di atmosfer. Data ini bersumber dari satelit Himawari.";
+    } else {
+      return "Data PM2.5 (Estimasi) merupakan data yang didapatkan dari hasil pemodelan data AOD dengan sumber data dari satelit Himawari. Data ini memberikan estimasi kualitas PM2.5 pada area yang lebih luas, yaitu hingga level kelurahan.";
     }
   };
 
@@ -542,11 +559,46 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
           Hari Ini
         </button>
       </div>
-      {imageUrl && bounds && <ImageOverlay url={imageUrl} bounds={bounds} opacity={0.85} interactive={true} zIndex={1000} />}
+      <div className={`absolute ${dataType === "aod" ? "bottom-[8.5rem]" : "bottom-[15rem]"} left-4 z-[1000] bg-white p-2 rounded-md shadow-md flex items-center gap-2 cursor-pointer hover:bg-gray-100`} onClick={handleInfoClick}>
+        <svg
+          className="w-5 h-5 text-blue-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span className="text-sm font-semibold text-gray-700">
+          Informasi Data {dataType === "aod" ? "AOD" : "PM2.5 (Estimasi)"}
+        </span>
+      </div>
+      {showInfoPopup && (
+        <div className={`absolute ${dataType === "aod" ? "bottom-[11.5rem]" : "bottom-[13rem]"} left-4 bg-white p-4 rounded-md shadow-lg z-[1100] max-w-xs`}>
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-semibold text-gray-700">
+              Informasi Data {dataType === "aod" ? "AOD" : "PM2.5 (Estimasi)"}
+            </h4>
+            <button
+              className="text-gray-500 hover:text-gray-700"
+              onClick={handleClosePopup}
+            >
+              ×
+            </button>
+          </div>
+          <p className="text-sm text-gray-600">{getInfoContent()}</p>
+        </div>
+      )}
       <div className={`${styles.legend} z-[1000]`}>
         <h4>{legendTitle}</h4>
         <GradientLegend dataType={dataType} />
       </div>
+      {imageUrl && bounds && <ImageOverlay url={imageUrl} bounds={bounds} opacity={0.85} interactive={true} zIndex={1000} />}
     </>
   );
 };

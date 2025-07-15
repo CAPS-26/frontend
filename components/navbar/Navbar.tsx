@@ -16,7 +16,6 @@ const Navbar = () => {
     setIsDropdownOpen(false);
   };
 
- 
   const getTitle = (path: string) => {
     switch (path) {
       case "/":
@@ -26,9 +25,11 @@ const Navbar = () => {
       case "/pm25-aktual":
         return "PM2.5 (Aktual)";
       case "/calendar":
-        return "Kalendar";
+        return "Kalender";
+      case "/about":
+        return "Tentang";
       default:
-        return "WebGIS PM2.5 dan AOD"; 
+        return "WebGIS PM2.5 dan AOD";
     }
   };
 
@@ -57,7 +58,10 @@ const Navbar = () => {
         </div>
 
         <Link href="/calendar" className={`${styles.navLink} ${pathname === "/calendar" ? styles.active : ""}`}>
-          Kalendar
+          Kalender
+        </Link>
+        <Link href="/about" className={`${styles.navLink} ${pathname === "/about" ? styles.active : ""}`}>
+          Tentang
         </Link>
       </div>
     </div>

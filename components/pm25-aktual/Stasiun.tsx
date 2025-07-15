@@ -202,6 +202,7 @@ const StasiunPM25 = () => {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isClient, setIsClient] = useState(false);
+  const [showInfoPopup, setShowInfoPopup] = useState(false); // State baru untuk popup informasi
 
   const createIcon = useCallback((pm25: number | null) => {
     const color = staticPM25Color(pm25);
@@ -318,13 +319,11 @@ const StasiunPM25 = () => {
           }),
         ]);
 
-        // if (!pm25Response.ok) throw new Error(`Terjadi kesalahan saat memuat data PM2.5 untuk tanggal ${dateString}: ${pm25Response.status}`);
         if (!pm25Response.ok) throw new Error(`Terjadi kesalahan saat memuat data PM2.5 untuk tanggal ${dateString}`);
         const pm25Data = await pm25Response.json();
         if (pm25Data.error) throw new Error(pm25Data.error || "Gagal memuat data historis PM2.5");
         setHistoricalData((prev) => ({ ...prev, pm25: Array.isArray(pm25Data) ? pm25Data : [] }));
 
-        // if (!weatherResponse.ok) throw new Error(`Terjadi kesalahan saat memuat data cuaca untuk tanggal ${dateString}: ${weatherResponse.status}`);
         if (!weatherResponse.ok) throw new Error(`Terjadi kesalahan saat memuat data cuaca untuk tanggal ${dateString}`);
         const weatherData = await weatherResponse.json();
         if (weatherData.error) throw new Error(weatherData.error || "Gagal memuat data historis cuaca");
@@ -465,6 +464,15 @@ const StasiunPM25 = () => {
     });
   }, [selectedStation, stations, mapRef, fetchRealtimeData]);
 
+  // Fungsi baru untuk menangani klik elemen informasi dan tutup popup
+  const handleInfoClick = () => {
+    setShowInfoPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setShowInfoPopup(false);
+  };
+
   const memoizedMap = useMemo(
     () => (
       <MapComponent
@@ -522,6 +530,25 @@ const StasiunPM25 = () => {
         <div className={`flex w-full h-screen ${isSplitView ? "flex-row" : "flex-col"}`}>
           <div className={`${isSplitView ? "w-1/2" : "w-full"} h-full relative`} ref={containerRef}>
             {memoizedMap}
+            <div className="absolute bottom-[11.5rem] left-4 z-[1000] bg-white p-2 rounded-md shadow-md flex items-center gap-2 cursor-pointer hover:bg-gray-100" onClick={handleInfoClick}>
+              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-semibold text-gray-700">Informasi Data PM2.5 (Aktual)</span>
+            </div>
+            {showInfoPopup && (
+              <div className="absolute bottom-[13rem] left-4 bg-white p-4 rounded-md shadow-lg z-[1100] max-w-xs">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-sm font-semibold text-gray-700">Data PM2.5 (Aktual)</h4>
+                  <button className="text-gray-500 hover:text-gray-700" onClick={handleClosePopup}>
+                    ×
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Data PM2.5 (Aktual) merupakan data PM2.5 yang didapatkan langsung dari 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta. Data ini memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.
+                </p>
+              </div>
+            )}
             <div className={styles.legend}>
               <h4>Indikator PM2.5 (µg/m³)</h4>
               <div className={styles.legendItem}>
@@ -542,7 +569,7 @@ const StasiunPM25 = () => {
               </div>
               <div className={styles.legendItem}>
                 <span className={styles.legendColor} style={{ backgroundColor: "#000000" }}></span>
-                <span>Berbahaya (&gt;300)</span>
+                <span>Berbahaya (&gt; 300)</span>
               </div>
             </div>
           </div>
