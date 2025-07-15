@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "curl -fsSL https://get.pnpm.io/install.sh | sh - && source /vercel/.bashrc && yum update -y && yum install -y gcc-c++ make cairo-devel pango-devel libjpeg-turbo-devel giflib-devel librsvg2-devel pixman-devel && pnpm run build:next",
+    "build": "pnpm run build:next",
     "build:next": "next build",
     "start": "next start",
     "lint": "next lint"
