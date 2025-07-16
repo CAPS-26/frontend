@@ -37,6 +37,7 @@
     "leaflet-geosearch": "^4.2.0",
     "leaflet-geotiff": "^0.2.0",
     "leaflet.heat": "^0.2.0",
+    "lodash": "^4.17.21",
     "next": "15.1.6",
     "rbush": "^4.0.1",
     "react": "^19.1.0",
