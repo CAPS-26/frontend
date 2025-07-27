@@ -63,15 +63,33 @@ const About = () => {
                       AOD (<i>Aerosol Optical Depth</i>)
                     </>
                   ),
-                  desc: "Data AOD merupakan data yang digunakan untuk mengukur tingkat penyerapan atau penghamburan cahaya oleh partikel aerosol di atmosfer. Data ini bersumber dari satelit Himawari.",
+                  desc: (
+                    <>
+                      Data AOD merupakan data yang digunakan untuk mengukur tingkat penyerapan atau penghamburan cahaya oleh partikel aerosol di atmosfer. Data ini bersumber dari satelit Himawari yang didapatkan dari{" "}
+                      <a href="http://ftp.ptree.jaxa.jp/" target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline hover:text-teal-600">
+                        http://ftp.ptree.jaxa.jp/
+                      </a>
+                      .
+                    </>
+                  ),
                 },
                 {
                   title: "PM2.5 (Estimasi)",
                   desc: "Data PM2.5 (Estimasi) merupakan data yang didapatkan dari hasil pemodelan data AOD dengan sumber data dari satelit Himawari. Data ini memberikan estimasi kualitas PM2.5 pada area yang lebih luas, yaitu hingga level kelurahan.",
                 },
                 {
-                  title: "PM2.5 (Aktual)",
-                  desc: "Data PM2.5 (Aktual) merupakan data PM2.5 yang didapatkan langsung dari 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta, yaitu stasiun US Embassy 1, US Embassy 2, Bundaran HI, Kelapa Gading, Jagakarsa, Jakarta GBK, Lubang Buaya, dan Kebun Jeruk. Data PM2.5 (Aktual) memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.",
+                  title: <>PM2.5 (Aktual)</>,
+                  desc: (
+                    <>
+                      Data PM2.5 (Aktual) merupakan data ISPU PM2.5 yang didapatkan dari{" "}
+                      <a href="https://rendahemisi.jakarta.go.id" target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline hover:text-teal-600">
+                        {" "}
+                        Jakarta Rendah Emisi.{" "}
+                      </a>
+                      Terdapat 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta, yaitu stasiun US Embassy 1, US Embassy 2, Bundaran HI, Kelapa Gading, Jagakarsa, Jakarta GBK, Lubang Buaya, dan Kebun Jeruk yang menampilkan konsentrasi
+                      PM2.5 aktual. Data ini memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.
+                    </>
+                  ),
                 },
                 {
                   title: "Data Cuaca",
