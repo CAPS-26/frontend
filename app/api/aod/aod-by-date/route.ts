@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+
 export async function POST(request: Request) {
   try {
     const { tanggal } = await request.json();
@@ -8,12 +9,14 @@ export async function POST(request: Request) {
     }
 
     const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api1/get-data-aodbydate/` : "http://127.0.0.1:8000/api1/get-data-aodbydate/";
+    
+    console.log("API_BASE_URL:", process.env.API_BASE_URL);
 
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
+        // "ngrok-skip-browser-warning": "true",
       },
       body: JSON.stringify({ tanggal }),
       cache: "no-store",

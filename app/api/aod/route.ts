@@ -4,6 +4,8 @@ export async function GET() {
   try {
     const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api1/get-data-aod/` : "http://127.0.0.1:8000/api1/get-data-aod/";
 
+    console.log("API_BASE_URL:", process.env.API_BASE_URL);
+
     const response = await fetch(apiUrl, {
       headers: {
         "Content-Type": "application/json",
