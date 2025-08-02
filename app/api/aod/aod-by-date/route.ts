@@ -10,7 +10,8 @@ export async function POST(request: Request) {
 
     const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api1/get-data-aodbydate/` : "http://127.0.0.1:8000/api1/get-data-aodbydate/";
     
-    console.log("API_BASE_URL:", process.env.API_BASE_URL);
+    console.log("API_BASE_URL in API route:", process.env.API_BASE_URL);
+    console.log("Fetching from:", apiUrl);
 
     const response = await fetch(apiUrl, {
       method: "POST",
