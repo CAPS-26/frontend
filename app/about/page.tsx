@@ -82,11 +82,14 @@ const About = () => {
                   desc: (
                     <>
                       Data PM2.5 (Aktual) merupakan data ISPU PM2.5 yang didapatkan dari{" "}
-                      <a href="https://rendahemisi.jakarta.go.id" target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline hover:text-teal-600">
+                      <a href="https://rendahemisi.jakarta.go.id" target="_blank" rel="noopener noreferrer" 
+                      className="text-teal-500 hover:underline hover:text-teal-600">
                         {" "}
                         Jakarta Rendah Emisi.{" "}
                       </a>
-                      Terdapat 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta, yaitu stasiun US Embassy 1, US Embassy 2, Bundaran HI, Kelapa Gading, Jagakarsa, Jakarta GBK, Lubang Buaya, dan Kebun Jeruk yang menampilkan konsentrasi
+                      Terdapat 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta, yaitu stasiun US Embassy 1, 
+                      US Embassy 2, Bundaran HI, Kelapa Gading, Jagakarsa, Jakarta GBK, Lubang Buaya, dan Kebun J
+                      Seruk yang menampilkan konsentrasi
                       PM2.5 aktual. Data ini memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.
                     </>
                   ),
