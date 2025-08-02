@@ -47,19 +47,7 @@ const isPolygonOrMultiPolygon = (geometry: GeoJSONTypes.Geometry): geometry is G
   return geometry.type === "Polygon" || geometry.type === "MultiPolygon";
 };
 
-const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
-  dataType,
-  geoData,
-  boundaryData,
-  selectedDate,
-  setSelectedDate,
-  isLoading,
-  legendTitle,
-  inputRef,
-  error,
-  fetchUrl,
-  fetchByDateUrl,
-}) => {
+const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, boundaryData, selectedDate, setSelectedDate, isLoading, legendTitle, inputRef, error, fetchUrl, fetchByDateUrl }) => {
   const map = useMap();
   const staticLayerRef = useRef<L.ImageOverlay | null>(null);
   const tooltipRef = useRef<L.Tooltip | null>(null);
@@ -238,29 +226,25 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
       console.log("DEBUG: generateStaticGrid - Jumlah points:", points.length);
 
       const bbox = turf.bbox(turf.featureCollection(validBoundaryFeatures));
-      console.log("DEBUG: generateStaticGrid - bbox:", bbox);
       const cellSize = 0.02;
       let grid;
       try {
         grid = turf.pointGrid(bbox, cellSize, { units: "degrees" });
-        console.log("DEBUG: generateStaticGrid - Grid created with features:", grid.features.length);
       } catch (error) {
-        console.error("DEBUG: generateStaticGrid - Error membuat grid titik:", error);
         return { imageUrl: null, bbox: [0, 0, 0, 0] };
       }
 
       let interpolated = turf.featureCollection([]);
       if (points.length > 0) {
         try {
-          interpolated = turf.interpolate(turf.featureCollection(points.map((p) => turf.point([p[1], p[0]], { value: p[2] }))), cellSize / 4, { gridType: "point", property: "value", units: "degrees", weight: 2.5 });
-          console.log("DEBUG: generateStaticGrid - Interpolated features:", interpolated.features.length);
+          interpolated = turf.interpolate(turf.featureCollection(points.map((p) => 
+            turf.point([p[1], p[0]], { value: p[2] }))), cellSize / 4, 
+          { gridType: "point", property: "value", units: "degrees", weight: 2.5 });
         } catch (error) {
-          console.error("DEBUG: generateStaticGrid - Error menginterpolasi data:", error);
           return { imageUrl: null, bbox: [0, 0, 0, 0] };
         }
       }
       interpolatedDataRef.current = interpolated.features as InterpolatedFeature[];
-      console.log("DEBUG: interpolatedDataRef set with length:", interpolatedDataRef.current.length);
 
       const canvas = document.createElement("canvas");
       const width = Math.ceil((bbox[2] - bbox[0]) / cellSize);
@@ -348,7 +332,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
       return { imageUrl: newImageUrl, bbox };
     },
     [dataType, cachedBoundaries]
-);
+  );
 
   const cachedGrid = useMemo(() => {
     if (!geoData || !boundaryData) {
@@ -529,65 +513,29 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({
           Pilih Tanggal
         </label>
         <div className="flex items-center gap-2">
-          <button
-            className="px-2 py-1 bg-[#EFEFEF] text-gray-700 rounded-full hover:bg-gray-300 focus:outline-none"
-            onClick={handlePrevDate}
-            title="Tanggal Sebelumnya"
-          >
+          <button className="px-2 py-1 bg-[#EFEFEF] text-gray-700 rounded-full hover:bg-gray-300 focus:outline-none" onClick={handlePrevDate} title="Tanggal Sebelumnya">
             &lt;
           </button>
-          <input
-            type="date"
-            id="datePicker"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className={styles.dateInput}
-            ref={inputRef}
-          />
-          <button
-            className="px-2 py-1 bg-[#EFEFEF] text-gray-700 rounded-full hover:bg-gray-300 focus:outline-none"
-            onClick={handleNextDate}
-            title="Tanggal Berikutnya"
-          >
+          <input type="date" id="datePicker" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className={styles.dateInput} ref={inputRef} />
+          <button className="px-2 py-1 bg-[#EFEFEF] text-gray-700 rounded-full hover:bg-gray-300 focus:outline-none" onClick={handleNextDate} title="Tanggal Berikutnya">
             &gt;
           </button>
         </div>
-        <button
-          className="mt-2 px-3 py-1 bg-[#4373D9] text-white rounded-xl hover:bg-[#1d4ed8] focus:outline-none"
-          onClick={handleTodayClick}
-        >
+        <button className="mt-2 px-3 py-1 bg-[#4373D9] text-white rounded-xl hover:bg-[#1d4ed8] focus:outline-none" onClick={handleTodayClick}>
           Hari Ini
         </button>
       </div>
       <div className={`absolute ${dataType === "aod" ? "bottom-[8.5rem]" : "bottom-[15rem]"} left-4 z-[1000] bg-white p-2 rounded-md shadow-md flex items-center gap-2 cursor-pointer hover:bg-gray-100`} onClick={handleInfoClick}>
-        <svg
-          className="w-5 h-5 text-blue-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span className="text-sm font-semibold text-gray-700">
-          Informasi Data {dataType === "aod" ? "AOD" : "PM2.5 (Estimasi)"}
-        </span>
+        <span className="text-sm font-semibold text-gray-700">Informasi Data {dataType === "aod" ? "AOD" : "PM2.5 (Estimasi)"}</span>
       </div>
       {showInfoPopup && (
         <div className={`absolute ${dataType === "aod" ? "bottom-[11.5rem]" : "bottom-[13rem]"} left-4 bg-white p-4 rounded-md shadow-lg z-[1100] max-w-xs`}>
           <div className="flex justify-between items-center mb-2">
-            <h4 className="text-sm font-semibold text-gray-700">
-              Informasi Data {dataType === "aod" ? "AOD" : "PM2.5 (Estimasi)"}
-            </h4>
-            <button
-              className="text-gray-500 hover:text-gray-700"
-              onClick={handleClosePopup}
-            >
+            <h4 className="text-sm font-semibold text-gray-700">Informasi Data {dataType === "aod" ? "AOD" : "PM2.5 (Estimasi)"}</h4>
+            <button className="text-gray-500 hover:text-gray-700" onClick={handleClosePopup}>
               ×
             </button>
           </div>
