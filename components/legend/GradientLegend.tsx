@@ -16,11 +16,11 @@ const GradientLegend: React.FC<GradientLegendProps> = ({ dataType }) => {
   ];
 
   const pm25Colors = [
-    "rgba(0, 204, 0, 0.85)", // Hijau (0-50)
-    "rgba(1, 51, 255, 0.85)", // Biru (51-100)
-    "rgba(255, 201, 0, 0.85)", // Kuning (101-199)
-    "rgba(255, 0, 0, 0.85)", // Merah (200-299)
-    "rgba(34, 34, 34, 0.85)", // Hitam (>300)
+    "rgba(0, 204, 0, 0.85)", // Hijau (0-15.4)
+    "rgba(1, 51, 255, 0.85)", // Biru (15.5-55.4)
+    "rgba(255, 201, 0, 0.85)", // Kuning (55.5-150.4)
+    "rgba(255, 0, 0, 0.85)", // Merah (150.5-250.4)
+    "rgba(34, 34, 34, 0.85)", // Hitam (>250.4)
   ];
 
   const gradient = dataType === "aod" ? `linear-gradient(to right, ${aodColors.join(", ")})` : `linear-gradient(to right, ${pm25Colors.join(", ")})`;
@@ -47,19 +47,19 @@ const GradientLegend: React.FC<GradientLegendProps> = ({ dataType }) => {
         ) : (
           <>
             <div className={styles.legendItem}>
-              <span>Baik (0 - 50)</span>
+              <span>Baik (0 - 15.4)</span>
             </div>
             <div className={styles.legendItem}>
-              <span>Sedang (51 - 100)</span>
+              <span>Sedang (15.5 - 55.4)</span>
             </div>
             <div className={styles.legendItem}>
-              <span>Tidak Sehat (101 - 199)</span>
+              <span>Tidak Sehat (55.5 - 150.4)</span>
             </div>
             <div className={styles.legendItem}>
-              <span>Sangat Tidak Sehat (200 - 299)</span>
+              <span>Sangat Tidak Sehat (150.5 - 250.4)</span>
             </div>
             <div className={styles.legendItem}>
-              <span>Berbahaya (&gt;300)</span>
+              <span>Berbahaya (&gt;250.4)</span>
             </div>
           </>
         )}

@@ -79,13 +79,13 @@ const MapComponent = React.memo(
               ${
                 pm25Value === null || isNaN(pm25Value)
                   ? "Kualitas: Tidak tersedia"
-                  : pm25Value <= 50
+                  : pm25Value <= 15.4
                   ? "Kualitas: BAIK"
-                  : pm25Value <= 100
+                  : pm25Value <= 55.4
                   ? "Kualitas: SEDANG"
-                  : pm25Value <= 199
+                  : pm25Value <= 150.4
                   ? "Kualitas: TIDAK SEHAT"
-                  : pm25Value <= 299
+                  : pm25Value <= 250.4
                   ? "Kualitas: SANGAT TIDAK SEHAT"
                   : "Kualitas: BERBAHAYA"
               }
@@ -158,13 +158,13 @@ const MapComponent = React.memo(
                   <div className="text-white font-semibold px-2 py-1 rounded mt-1 mb-1 inline-block" style={{ backgroundColor: staticPM25Color(pm25Value) }}>
                     {pm25Value === null || isNaN(pm25Value)
                       ? "Kualitas: Tidak tersedia"
-                      : pm25Value <= 50
+                      : pm25Value <= 15.4
                       ? "Kualitas: BAIK"
-                      : pm25Value <= 100
+                      : pm25Value <= 55.4
                       ? "Kualitas: SEDANG"
-                      : pm25Value <= 199
+                      : pm25Value <= 150.4
                       ? "Kualitas: TIDAK SEHAT"
-                      : pm25Value <= 299
+                      : pm25Value <= 250.4
                       ? "Kualitas: SANGAT TIDAK SEHAT"
                       : "Kualitas: BERBAHAYA"}
                   </div>
@@ -553,23 +553,23 @@ const StasiunPM25 = () => {
               <h4>Indikator PM2.5 (µg/m³)</h4>
               <div className={styles.legendItem}>
                 <span className={styles.legendColor} style={{ backgroundColor: "#00CC00" }}></span>
-                <span>Baik (0 - 50)</span>
+                <span>Baik (0 - 15.4)</span>
               </div>
               <div className={styles.legendItem}>
                 <span className={styles.legendColor} style={{ backgroundColor: "#0133FF" }}></span>
-                <span>Sedang (51 - 100)</span>
+                <span>Sedang (15.5 - 55.4)</span>
               </div>
               <div className={styles.legendItem}>
                 <span className={styles.legendColor} style={{ backgroundColor: "#FFC900" }}></span>
-                <span>Tidak Sehat (101 - 199)</span>
+                <span>Tidak Sehat (55.5 - 150.4)</span>
               </div>
               <div className={styles.legendItem}>
                 <span className={styles.legendColor} style={{ backgroundColor: "#FF0000" }}></span>
-                <span>Sangat Tidak Sehat (200 - 299)</span>
+                <span>Sangat Tidak Sehat (150.5 - 250.4)</span>
               </div>
               <div className={styles.legendItem}>
                 <span className={styles.legendColor} style={{ backgroundColor: "#000000" }}></span>
-                <span>Berbahaya (&gt; 300)</span>
+                <span>Berbahaya (&gt; 250.4)</span>
               </div>
             </div>
           </div>

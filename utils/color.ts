@@ -56,7 +56,7 @@ export const interpolatePM25Color = (value: number | null): string => {
     }
   }
 
-  // Default untuk nilai <= 50
+  // Default untuk nilai <= 15.4
   return `rgba(0, 204, 0, ${opacity})`;
 };
 
@@ -65,9 +65,9 @@ export const staticPM25Color = (value: number | null): string => {
   if (value === null || isNaN(value)) {
     return `rgba(160, 174, 192, ${opacity})`; // untuk data yg gaada
   }
-  if (value <= 50) return `rgba(0, 204, 0, ${opacity})`; 
-  if (value <= 100) return `rgba(1, 51, 255, ${opacity})`; 
-  if (value <= 199) return `rgba(255, 201, 0, ${opacity})`; 
-  if (value <= 299) return `rgba(255, 0, 0, ${opacity})`; 
+  if (value <= 15.4) return `rgba(0, 204, 0, ${opacity})`; 
+  if (value <= 55.4) return `rgba(1, 51, 255, ${opacity})`; 
+  if (value <= 150.4) return `rgba(255, 201, 0, ${opacity})`; 
+  if (value <= 250.4) return `rgba(255, 0, 0, ${opacity})`; 
   return `rgba(34, 34, 34, ${opacity})`; 
 };

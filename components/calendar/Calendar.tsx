@@ -68,19 +68,19 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   const getPMImage = useCallback((value: number | null): string => {
     if (value === null) return "/images/indikator_tidak_tersedia.png";
-    if (value <= 50) return "/images/indikator_baik.png";
-    if (value <= 100) return "/images/indikator_sedang.png";
-    if (value <= 199) return "/images/indikator_tidak_sehat.png";
-    if (value <= 299) return "/images/indikator_sangat_tidak_sehat.png";
+    if (value <= 15.4) return "/images/indikator_baik.png";
+    if (value <= 55.4) return "/images/indikator_sedang.png";
+    if (value <= 150.4) return "/images/indikator_tidak_sehat.png";
+    if (value <= 250.4) return "/images/indikator_sangat_tidak_sehat.png";
     return "/images/indikator_berbahaya.png";
   }, []);
 
   const getActivityRecommendation = useCallback((pmValue: number | null): string => {
     if (pmValue === null) return "Data kualitas udara tidak tersedia";
-    if (pmValue <= 50) return "Aman untuk beraktivitas di luar rumah";
-    if (pmValue <= 100) return "Boleh beraktivitas di luar dengan masker";
-    if (pmValue <= 199) return "Hindari aktivitas luar terlalu lama, gunakan masker";
-    if (pmValue <= 299) return "Batasi aktivitas luar, gunakan masker N95";
+    if (pmValue <= 15.4) return "Aman untuk beraktivitas di luar rumah";
+    if (pmValue <= 55.4) return "Boleh beraktivitas di luar dengan masker";
+    if (pmValue <= 150.4) return "Hindari aktivitas luar terlalu lama, gunakan masker";
+    if (pmValue <= 250.4) return "Batasi aktivitas luar, gunakan masker N95";
     return "Hindari semua aktivitas di luar rumah";
   }, []);
 
@@ -297,7 +297,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         </div>
         <p>Kategori</p>
         <strong>
-          {selectedPMValue === null ? "DATA TIDAK TERSEDIA" : selectedPMValue <= 50 ? "BAIK" : selectedPMValue <= 100 ? "SEDANG" : selectedPMValue <= 199 ? "TIDAK SEHAT" : selectedPMValue <= 299 ? "SANGAT TIDAK SEHAT" : "BERBAHAYA"}
+          {selectedPMValue === null ? "DATA TIDAK TERSEDIA" : selectedPMValue <= 15.4 ? "BAIK" : selectedPMValue <= 55.4 ? "SEDANG" : selectedPMValue <= 150.4 ? "TIDAK SEHAT" : selectedPMValue <= 250.4 ? "SANGAT TIDAK SEHAT" : "BERBAHAYA"}
         </strong>
       </div>
     );
@@ -314,32 +314,32 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         </div>
         {[
           {
-            range: "0-50",
-            color: staticPM25Color(50),
+            range: "0-15.4",
+            color: staticPM25Color(15.4),
             label: "Baik",
             desc: "Tingkat kualitas udara yang tidak memberikan efek bagi kesehatan manusia atau hewan dan tidak berpengaruh pada tumbuhan, bangunan ataupun nilai estetika",
           },
           {
-            range: "51-100",
-            color: staticPM25Color(100),
+            range: "15.5-55.4",
+            color: staticPM25Color(55.4),
             label: "Sedang",
             desc: "Tingkat kualitas udara yang tidak berpengaruh pada kesehatan manusia ataupun hewan tetapi berpengaruh pada tumbuhan yang sensitif, dan nilai estetika",
           },
           {
-            range: "101-199",
-            color: staticPM25Color(199),
+            range: "55.5-150.4",
+            color: staticPM25Color(150.4),
             label: "Tidak Sehat",
             desc: "Tingkat kualitas udara yang bersifat merugikan pada manusia ataupun kelompok hewan yang sensitif atau bisa menimbulkan kerusakan pada tumbuhan ataupun nilai estetika",
           },
           {
-            range: "200-299",
-            color: staticPM25Color(299),
+            range: "150.5-250.4",
+            color: staticPM25Color(250.4),
             label: "Sangat Tidak Sehat",
             desc: "Tingkat kualitas udara yang dapat merugikan kesehatan pada sejumlah segmen populasi yang terpapar",
           },
           {
-            range: "300-500",
-            color: staticPM25Color(500),
+            range: ">250.4",
+            color: staticPM25Color(250.5),
             label: "Berbahaya",
             desc: "Tingkat kualitas udara berbahaya yang secara umum dapat merugikan kesehatan yang serius pada populasi",
           },
