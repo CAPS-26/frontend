@@ -116,12 +116,19 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   const fetchRealtimePM25Data = useCallback(async () => {
     try {
       const response = await fetch("/api/pm25-aktual", { cache: "no-store" });
-      if (!response.ok) throw new Error(`${response.status} : Gagal memuat data PM2.5`);
+      if (!response.ok) {
+        console.warn(`Failed to fetch real-time PM2.5 data: ${response.status}`);
+        return []; // Kembalikan array kosong jika gagal
+      }
       const data = await response.json();
-      if (data.error) throw new Error(data.error || "Gagal memuat data PM2.5");
-      return data;
+      if (data.error) {
+        console.warn(`Error in real-time PM2.5 data: ${data.error}`);
+        return []; // Kembalikan array kosong jika ada error dari server
+      }
+      return Array.isArray(data) ? data : []; // Pastikan data adalah array
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Terjadi kesalahan saat mengambil data PM2.5");
+      console.error("Error fetching real-time PM2.5 data:", err);
+      return []; // Kembalikan array kosong jika terjadi error
     }
   }, []);
 
@@ -132,12 +139,19 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date }),
       });
-      if (!response.ok) throw new Error(`${response.status} : Gagal memuat data historis PM2.5 tanggal ${date}`);
+      if (!response.ok) {
+        console.warn(`Failed to fetch historical PM2.5 data for ${date}: ${response.status}`);
+        return [];
+      }
       const data = await response.json();
-      if (data.error) throw new Error(data.error || "Gagal memuat data historis PM2.5");
-      return data;
+      if (data.error) {
+        console.warn(`Error in historical PM2.5 data: ${data.error}`);
+        return [];
+      }
+      return Array.isArray(data) ? data : [];
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Terjadi kesalahan saat mengambil data historis PM2.5");
+      console.error(`Error fetching historical PM2.5 data for ${date}:`, err);
+      return [];
     }
   }, []);
 
@@ -158,9 +172,15 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
           cache: "no-store",
         });
 
-        if (!response.ok) throw new Error(`${response.status} : Gagal memuat data cuaca tanggal ${date}:`);
+        if (!response.ok) {
+          console.warn(`Failed to fetch weather data for ${date}: ${response.status}`);
+          throw new Error(`Gagal memuat data cuaca tanggal ${date}`);
+        }
         const data = await response.json();
-        if (data.error) throw new Error(data.error || "Gagal memuat data cuaca");
+        if (data.error) {
+          console.warn(`Error in weather data: ${data.error}`);
+          throw new Error(data.error || "Gagal memuat data cuaca");
+        }
         return data;
       } catch (error) {
         setWeatherError(error instanceof Error ? error.message : "Terjadi kesalahan saat mengambil data cuaca");
@@ -209,7 +229,9 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
       const combinedData = [...realtimeData, ...historicalData];
       setPM25Data(combinedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat data PM2.5. Silakan coba lagi.");
+      console.error("Error loading PM2.5 data for month:", err);
+      setError("Gagal memuat beberapa data PM2.5, tetapi kalender tetap ditampilkan.");
+      setPM25Data([]); // Tetap set array kosong untuk memastikan kalender dirender
     } finally {
       setIsLoading(false);
     }
@@ -442,49 +464,40 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                 </select>
               </div>
             </div>
-            {isLoading ? (
-              <div className="text-center py-8 flex items-center justify-center gap-4">
-                <div className={styles.spinner}></div>
-                <span style={{ color: "black" }}>Memuat data PM2.5...</span>
-              </div>
-            ) : error ? (
-              <div className="text-center py-8 text-red-500">{error}</div>
-            ) : (
-              <div className={styles.calendarGrid}>
-                {["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map((day) => (
-                  <div key={day} className={styles.dayName}>
-                    {day.substring(0, 3)}
-                  </div>
-                ))}
-                {calendarDays.map((dayData, index) => (
-                  <div
-                    key={index}
-                    className={`${styles.dayCell} ${dayData.day ? "" : styles.otherMonthDay} ${isCurrentMonth && dayData.day === today.getDate() ? styles.today : ""} ${
-                      dayData.day && selectedDate.getDate() === dayData.day && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear ? styles.selectedDate : ""
-                    }`}
-                    onClick={() => dayData.day && handleDateClick(dayData.day)}
-                    style={{ cursor: dayData.day ? "pointer" : "default" }}
-                  >
-                    {dayData.day && (
-                      <>
-                        <div className={styles.dateNumber}>{dayData.day}</div>
-                        <div className={styles.indikatorPMContainer}>
-                          <div
-                            className={styles.indikatorPM}
-                            style={{
-                              backgroundColor: staticPM25Color(dayData.pm25),
-                            }}
-                          >
-                            <span className={styles.pmValue}>{dayData.pm25 !== null ? Math.round(dayData.pm25) : "-"}</span>
-                          </div>
-                          <div className={styles.dataLabel}>{dayData.pm25 !== null ? "Aktual" : "No Data"}</div>
+            <div className={styles.calendarGrid}>
+              {["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map((day) => (
+                <div key={day} className={styles.dayName}>
+                  {day.substring(0, 3)}
+                </div>
+              ))}
+              {calendarDays.map((dayData, index) => (
+                <div
+                  key={index}
+                  className={`${styles.dayCell} ${dayData.day ? "" : styles.otherMonthDay} ${isCurrentMonth && dayData.day === today.getDate() ? styles.today : ""} ${
+                    dayData.day && selectedDate.getDate() === dayData.day && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear ? styles.selectedDate : ""
+                  }`}
+                  onClick={() => dayData.day && handleDateClick(dayData.day)}
+                  style={{ cursor: dayData.day ? "pointer" : "default" }}
+                >
+                  {dayData.day && (
+                    <>
+                      <div className={styles.dateNumber}>{dayData.day}</div>
+                      <div className={styles.indikatorPMContainer}>
+                        <div
+                          className={styles.indikatorPM}
+                          style={{
+                            backgroundColor: staticPM25Color(dayData.pm25),
+                          }}
+                        >
+                          <span className={styles.pmValue}>{dayData.pm25 !== null ? Math.round(dayData.pm25) : "-"}</span>
                         </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                        <div className={styles.dataLabel}>{dayData.pm25 !== null ? "Aktual" : "No Data"}</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         {showRightPanel && (
