@@ -257,7 +257,8 @@ const StasiunPM25 = () => {
 
       if (!pm25Response.ok) throw new Error(`PM2.5 fetch failed: ${pm25Response.status}`);
       const pm25RawText = await pm25Response.text();
-      const pm25CleanText = pm25RawText.replace(/NaN/g, "null");
+      // const pm25CleanText = pm25RawText.replace(/NaN/g, "null");
+      const pm25CleanText = pm25RawText.replace(/NaN/g, "null").replace(/"0"/g, "null");
       const pm25Data = JSON.parse(pm25CleanText);
       if (pm25Data.error) throw new Error(pm25Data.error || "Gagal memuat data PM2.5");
 

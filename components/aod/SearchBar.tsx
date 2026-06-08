@@ -22,25 +22,34 @@ interface SearchResult {
 }
 
 interface SearchBarProps {
+  // fungsi callback untuk memperbarui posisi marker di peta sesuai lokasi hasil pencarian
   updateMarker: (latlng: L.LatLng) => void;
   mapRef: React.MutableRefObject<L.Map | null>;
+  // validasi apakah lokasi masuk wilayah Jakarta
   boundaryData: BoundaryGeoJSONData | null;
+  // fungsi callback untuk mereset kondisi peta (menghapus marker dan mengembalikan view awal)
   resetMap: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryData, resetMap }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  //menyimpan timer debounce agar fungsi cari tidak dijalankan terlalu sering saat user mengetik
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  // nilai input teks pencarian
   const [searchQuery, setSearchQuery] = useState<string>("");
+  // array hasil pencarian yang sudah difilter dan akan ditampilkan di dropdown
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // Membersihkan timer debounce saat komponen hilang agar pencarian yang tertunda tidak tetap jalan
   useEffect(() => {
     return () => {
       if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     };
   }, []);
 
+  // Ini kode yang berjalan sekali ketika komponen SearchBar muncul di layar (mount)
+  // hilangin dropdown pencarian ketika user klik di tempat lain
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -56,6 +65,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
     }
   }, []);
 
+  // memeriksa apakah titik (latitude, longitude) berada dalam polygon batas wilayah Jakarta (boundaryData),
+  // jika lokasi valid maka ditampilkan jika lokasi tidak valid maka diabaikan
   const isPointInJakarta = (lat: number, lng: number): boolean => {
     if (!boundaryData || !boundaryData.features) return false;
     const point = turf.point([lng, lat]);
@@ -69,25 +80,32 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    setError(null);
+    const query = e.target.value; // Ambil teks yang baru diketik user
+    setSearchQuery(query); // Update state untuk input teks pencarian
+    setError(null); // Reset error saat user mulai mengetik baru
 
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current); // bersihkan timer debounce jika masih jalan
 
     if (query.length > 2 && typeof window !== "undefined") {
+      // Cek apakah input lebih dari 2 karakter & kode berjalan di browser (bukan server)
       debounceTimeout.current = setTimeout(async () => {
+        // Mulai timer delay 500ms sebelum pencarian dieksekusi
         try {
           const provider = new OpenStreetMapProvider();
+          // Pencarian dilakukan menggunakan library leaflet-geosearch dengan provider OpenStreetMap, menambahkan "Jakarta, Indonesia" pada query supaya pencarian terfokus di wilayah Jakarta
           const results: GeoSearchResult[] = await provider.search({ query: `${query}, Jakarta, Indonesia` });
+          // jika hasil pencarian kosong, beri pesan error
           if (results.length === 0) {
             setError("Tidak ada hasil yang ditemukan di Jakarta");
             setSearchResults([]);
             return;
           }
           const formattedResults: SearchResult[] = results
+            // Filter hasil hanya yang benar-benar ada di dalam wilayah Jakarta menggunakan fungsi isPointInJakarta
             .filter((result) => isPointInJakarta(result.y, result.x))
+            // Batasi maksimal 5 hasil dan format hasil agar mudah dipakai
             .slice(0, 5)
+            // Hasil akhir disiapkan dalam bentuk array formattedResults (dropdown)
             .map((result: GeoSearchResult) => ({
               x: result.x,
               y: result.y,
@@ -99,12 +117,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
                   ])
                 : null,
             }));
+          // jika setelah filter ternyata tidak ada lokasi yang benar-benar di Jakarta, tampilkan error dan kosongkan dropdown
           if (formattedResults.length === 0) {
             setError("Tidak ada hasil yang ditemukan di wilayah Jakarta");
             setSearchResults([]);
             return;
           }
           setSearchResults(formattedResults);
+          // Kalau ada hasil valid, simpan ke state searchResults agar UI bisa menampilkan daftar dropdown lokasi pencarian.
         } catch (error) {
           console.error("Search error:", error);
           setError("Gagal melakukan pencarian");
@@ -116,30 +136,39 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
     }
   };
 
+  // Menangani Pemilihan Hasil Pencarian
+  // Saat user klik atau pilih hasil pencarian,
   const handleSearchSelect = (result: SearchResult) => {
+    //  input diisi label lokasi tersebut
     setSearchQuery(result.label);
+    // dropdown hasil diclosed
     setSearchResults([]);
+    // dan kesalahan error direset
     setError(null);
     if (mapRef.current) {
       const latlng = L.latLng(result.y, result.x);
-      updateMarker(latlng);
-      mapRef.current.setView([result.y, result.x], 15);
+      updateMarker(latlng); // letakkan marker ke koordinat hasil pencarian
+      mapRef.current.setView([result.y, result.x], 15); // fokus peta ke lokasi tersebut dengan zoom 15
     }
   };
 
+  // Reset Pencarian dan Marker
   const handleReset = () => {
+    // Mengosongkan input, hasil pencarian, dan pesan error
     setSearchQuery("");
     setSearchResults([]);
     setError(null);
-    resetMap();
+    resetMap(); // Memanggil fungsi resetMap yang menghapus marker dan mengatur view peta ke default
   };
 
+  // Render UI Komponen SearchBar
   return (
     <div className={styles.searchBarContainer}>
       <label htmlFor="searchInput" className={styles.searchLabel}>
         Cari Lokasi
       </label>
       <div className={styles.searchInputContainer}>
+        {/* input text dengan event onChange memicu handleSearchChange. */}
         <input
           type="text"
           id="searchInput"
@@ -192,10 +221,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
           Cari
         </button>
       </div>
-      <button
-        className={`${styles.searchButton} mt-2`}
-        onClick={handleReset}
-      >
+      <button className={`${styles.searchButton} mt-2`} onClick={handleReset}>
         Reset
       </button>
       {error && <div className={styles.searchError}>{error}</div>}
@@ -212,6 +238,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
   );
 };
 
+// React.memo membungkus komponen agar tidak re-render jika props dan state tidak berubah, meningkatkan performa
 SearchBar.displayName = "SearchBar";
 
 export default React.memo(SearchBar);

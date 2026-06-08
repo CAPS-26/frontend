@@ -12,7 +12,7 @@ const About = () => {
 
           <section className="mb-12 bg-white rounded-xl p-8 border border-green-200 hover:shadow-lg hover:border-green-300 transition-all duration-300">
             <h2 className="text-xl sm:text-2xl font-bold text-black mb-6">Fitur Website</h2>
-            <p className="text-gray-700 text-lg mb-6 leading-relaxed">WebGIS ini dirancang untuk memvisualisasikan dan menganalisis data kualitas udara di Jakarta dengan fitur-fitur berikut:</p>
+            <p className="text-gray-700 text-lg mb-6">WebGIS ini dirancang untuk memvisualisasikan dan menganalisis data kualitas udara di Jakarta dengan fitur-fitur berikut:</p>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 {
@@ -54,7 +54,6 @@ const About = () => {
 
           <section className="bg-white rounded-xl p-8 border border-green-200 hover:shadow-lg hover:border-green-300 transition-all duration-300">
             <h2 className="text-xl sm:text-2xl font-bold text-black mb-6">Data Yang Digunakan</h2>
-            {/* <p className="text-gray-700 text-lg mb-6 leading-relaxed">Website ini menggunakan empat jenis data:</p> */}
             <ul className="list-disc pl-6 space-y-4">
               {[
                 {
@@ -82,15 +81,12 @@ const About = () => {
                   desc: (
                     <>
                       Data PM2.5 (Aktual) merupakan data ISPU PM2.5 yang didapatkan dari{" "}
-                      <a href="https://rendahemisi.jakarta.go.id" target="_blank" rel="noopener noreferrer" 
-                      className="text-teal-500 hover:underline hover:text-teal-600">
+                      <a href="https://rendahemisi.jakarta.go.id" target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline hover:text-teal-600">
                         {" "}
                         Jakarta Rendah Emisi.{" "}
                       </a>
-                      Terdapat 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta, yaitu stasiun US Embassy 1, 
-                      US Embassy 2, Bundaran HI, Kelapa Gading, Jagakarsa, Jakarta GBK, Lubang Buaya, dan Kebun J
-                      Seruk yang menampilkan konsentrasi
-                      PM2.5 aktual. Data ini memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.
+                      Terdapat 8 stasiun pemantauan di Jakarta, yaitu stasiun US Embassy 1, US Embassy 2, Bundaran HI, Kelapa Gading, Jagakarsa, Jakarta GBK, Lubang Buaya, dan Kebun Jeruk yang menampilkan konsentrasi PM2.5 aktual. Data ini
+                      memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.
                     </>
                   ),
                 },
@@ -98,7 +94,7 @@ const About = () => {
                   title: "Data Cuaca",
                   desc: (
                     <>
-                      Data cuaca digunakan untuk melakukan pemantauan cuaca. Data diperoleh dari{" "}
+                      Data cuaca digunakan untuk melakukan pemantauan cuaca dengan parameter suhu, curah hujan, kelembaban, arah angin, dan kecepatan angin. Data diperoleh dari{" "}
                       <a href="https://www.visualcrossing.com" target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline hover:text-teal-600">
                         Visual Crossing
                       </a>

@@ -23,14 +23,18 @@ const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLa
 const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON), { ssr: false });
 
+export type MapDataType = "aod" | "pm25-est" | "pm25-pred";
+
 interface GenericMapProps {
-  dataType: "aod" | "pm25-est";
+  dataType: MapDataType;
   fetchUrl: string;
   fetchByDateUrl: string;
   legendTitle: string;
+  /** Batas hari ke depan untuk pemilih tanggal (prediksi). Default 14. */
+  maxFutureDays?: number;
 }
 
-const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDateUrl, legendTitle }) => {
+const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDateUrl, legendTitle, maxFutureDays = 14 }) => {
   const mapRef = useRef<L.Map | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const tooltipRef = useRef<L.Tooltip | null>(null);
@@ -87,7 +91,8 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
         }
 
         const rawText = await response.text();
-        const cleanText = rawText.replace(/NaN/g, "null");
+        // const cleanText = rawText.replace(/NaN/g, "null");
+        const cleanText = rawText.replace(/NaN/g, "null").replace(/"0"/g, "null");
         const data = JSON.parse(cleanText);
 
         if (data.error) {
@@ -174,7 +179,7 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
 
   return (
     <div className="relative min-h-screen w-full flex flex-col">
-      <div className="absolute top-16 left-4 z-[1000]">
+      <div className="absolute left-4 z-[1000]" style={{ top: "var(--header-offset, 64px)" }}>
         <SearchBar updateMarker={updateMarker} mapRef={mapRef} boundaryData={boundaryData} resetMap={resetMap} />
       </div>
       {error && (
@@ -269,6 +274,7 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
           inputRef={inputRef}
           fetchUrl={fetchUrl}
           fetchByDateUrl={fetchByDateUrl}
+          maxFutureDays={maxFutureDays}
         />
         {markerPosition && <Marker position={markerPosition} icon={customIcon} />}
       </MapContainer>

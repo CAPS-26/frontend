@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import styles from "@/styles/calendar.module.css";
 import Image from "next/image";
 import { staticPM25Color } from "@/utils/color";
-
+import { formatLocalDate, getDayDataKind, isFutureDate } from "@/lib/date";
 interface PM25Data {
   id: number;
   station_name: string;
@@ -51,6 +51,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [pm25Data, setPM25Data] = useState<PM25Data[]>([]);
+  const [predictionData, setPredictionData] = useState<PM25Data[]>([]);
   const [selectedStation, setSelectedStation] = useState<string>(location || DEFAULT_STATION);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,13 +107,6 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     return name.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
   }, []);
 
-  const formatLocalDate = useCallback((date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }, []);
-
   const fetchRealtimePM25Data = useCallback(async () => {
     try {
       const response = await fetch("/api/pm25-aktual", { cache: "no-store" });
@@ -155,6 +149,23 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     }
   }, []);
 
+  const fetchPredictionPM25Data = useCallback(async (date: string) => {
+    try {
+      const response = await fetch("/api/pm25-prediksi/stasiun-by-date", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date }),
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      if (data.error) return [];
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error(`Error fetching prediction for ${date}:`, err);
+      return [];
+    }
+  }, []);
+
   const fetchWeatherData = useCallback(
     async (date: string) => {
       setIsWeatherLoading(true);
@@ -189,7 +200,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         setIsWeatherLoading(false);
       }
     },
-    [formatLocalDate]
+    []
   );
 
   useEffect(() => {
@@ -199,7 +210,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         setWeatherData(station);
       }
     });
-  }, [selectedDate, selectedStation, fetchWeatherData, formatLocalDate]);
+  }, [selectedDate, selectedStation, fetchWeatherData]);
 
   const loadDataForMonth = useCallback(async () => {
     setIsLoading(true);
@@ -212,10 +223,15 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
       const daysInMonth = getDaysInMonth(currentMonth, currentYear);
       const datesToFetch: string[] = [];
 
+      const futureDatesToFetch: string[] = [];
+
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentYear, currentMonth, day);
         const dateStr = formatLocalDate(date);
-        if (dateStr !== todayStr) {
+        if (dateStr === todayStr) continue;
+        if (isFutureDate(date)) {
+          futureDatesToFetch.push(dateStr);
+        } else {
           datesToFetch.push(dateStr);
         }
       }
@@ -226,8 +242,15 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         historicalData = responses.flat();
       }
 
+      let futurePredData: PM25Data[] = [];
+      if (futureDatesToFetch.length > 0) {
+        const predResponses = await Promise.all(futureDatesToFetch.map((date) => fetchPredictionPM25Data(date)));
+        futurePredData = predResponses.flat();
+      }
+
       const combinedData = [...realtimeData, ...historicalData];
       setPM25Data(combinedData);
+      setPredictionData(futurePredData);
     } catch (err) {
       console.error("Error loading PM2.5 data for month:", err);
       setError("Gagal memuat beberapa data PM2.5, tetapi kalender tetap ditampilkan.");
@@ -235,7 +258,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     } finally {
       setIsLoading(false);
     }
-  }, [currentMonth, currentYear, fetchRealtimePM25Data, fetchHistoricalPM25Data, formatLocalDate]);
+  }, [currentMonth, currentYear, fetchRealtimePM25Data, fetchHistoricalPM25Data, fetchPredictionPM25Data]);
 
   useEffect(() => {
     loadDataForMonth();
@@ -243,12 +266,25 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   const getPM25Value = useCallback(
     (date: Date) => {
-      if (!pm25Data.length) return null;
       const dateString = formatLocalDate(date);
-      const stationData = pm25Data.find((item) => item.date === dateString && item.station_name === selectedStation);
+      const kind = getDayDataKind(date);
+      const source = kind === "future" ? predictionData : pm25Data;
+      if (!source.length) return null;
+      const stationData = source.find((item) => item.date === dateString && item.station_name === selectedStation);
       return stationData?.pm25_value ?? null;
     },
-    [pm25Data, selectedStation, formatLocalDate]
+    [pm25Data, predictionData, selectedStation]
+  );
+
+  const getDayLabel = useCallback(
+    (date: Date, pm25: number | null): string => {
+      if (pm25 === null) return "No Data";
+      const kind = getDayDataKind(date);
+      if (kind === "future") return "Prediksi";
+      if (kind === "today") return "Hari ini";
+      return "Aktual";
+    },
+    []
   );
 
   const generateCalendarData = useCallback(() => {
@@ -269,10 +305,14 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     return days;
   }, [currentMonth, currentYear, getPM25Value]);
 
-  const stationNames = pm25Data
+  const stationNamesFromData = pm25Data
+    .concat(predictionData)
     .map((item) => item?.station_name)
     .filter((name): name is string => !!name)
     .filter((name, index, self) => self.indexOf(name) === index);
+
+  const stationNames =
+    stationNamesFromData.length > 0 ? stationNamesFromData : [DEFAULT_STATION];
 
   const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStation = e.target.value;
@@ -443,8 +483,17 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
             </div>
           </div>
           <h2 className={styles.date}>
-            Data PM2.5 (µg/m³) pada tanggal <span style={{ fontWeight: "bold" }}>{formatDate(selectedDate)}</span>
+            Data PM2.5 (µg/m³) —{" "}
+            <span className={styles.kindBadge} data-kind={getDayDataKind(selectedDate)}>
+              {getDayDataKind(selectedDate) === "future" ? "Prediksi" : getDayDataKind(selectedDate) === "today" ? "Hari ini (Aktual)" : "Aktual"}
+            </span>{" "}
+            pada <span style={{ fontWeight: "bold" }}>{formatDate(selectedDate)}</span>
           </h2>
+          <div className={styles.calendarLegend}>
+            <span><i className={styles.dotPast} /> Masa lalu (aktual)</span>
+            <span><i className={styles.dotToday} /> Hari ini</span>
+            <span><i className={styles.dotFuture} /> Masa depan (prediksi)</span>
+          </div>
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <div className={styles.monthYearSelector}>
@@ -456,7 +505,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                   ))}
                 </select>
                 <select value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value))} className={styles.yearSelector}>
-                  {Array.from({ length: 10 }, (_, i) => currentYear - 5 + i).map((year) => (
+                  {Array.from({ length: 12 }, (_, i) => currentYear - 5 + i).map((year) => (
                     <option key={year} value={year}>
                       {year}
                     </option>
@@ -475,7 +524,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                   key={index}
                   className={`${styles.dayCell} ${dayData.day ? "" : styles.otherMonthDay} ${isCurrentMonth && dayData.day === today.getDate() ? styles.today : ""} ${
                     dayData.day && selectedDate.getDate() === dayData.day && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear ? styles.selectedDate : ""
-                  }`}
+                  } ${dayData.day && getDayDataKind(new Date(currentYear, currentMonth, dayData.day)) === "future" ? styles.futureDay : ""}`}
                   onClick={() => dayData.day && handleDateClick(dayData.day)}
                   style={{ cursor: dayData.day ? "pointer" : "default" }}
                 >
@@ -491,7 +540,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                         >
                           <span className={styles.pmValue}>{dayData.pm25 !== null ? Math.round(dayData.pm25) : "-"}</span>
                         </div>
-                        <div className={styles.dataLabel}>{dayData.pm25 !== null ? "Aktual" : "No Data"}</div>
+                        <div className={styles.dataLabel}>{getDayLabel(new Date(currentYear, currentMonth, dayData.day), dayData.pm25)}</div>
                       </div>
                     </>
                   )}

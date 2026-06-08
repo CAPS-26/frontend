@@ -1,0 +1,38 @@
+.banner {
+  position: fixed;
+  top: var(--navbar-height, 64px);
+  height: var(--banner-height, 40px);
+  left: 0;
+  right: 0;
+  z-index: 850;
+  background: linear-gradient(90deg, #fff8e1 0%, #fff3cd 100%);
+  border-bottom: 1px solid #f0c674;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #5c4a00;
+  text-align: center;
+}
+
+.badge {
+  background: #e6a817;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .banner {
+    font-size: 12px;
+    padding: 6px 12px;
+    flex-wrap: wrap;
+  }
+}

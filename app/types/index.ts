@@ -1,5 +1,6 @@
 import * as GeoJSON from "geojson";
 
+// dipakai untuk heatmap di GenericHeatMapLayer.tsx
 export interface Feature {
   type: "Feature";
   geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon;
@@ -9,6 +10,7 @@ export interface Feature {
   } & Record<string, unknown>;
 }
 
+// digunakan untuk batas wilayah di GenericHeatMapLayer.tsx dan SearchBar.tsx
 export interface BoundaryFeature {
   type: "Feature";
   geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon;
@@ -17,16 +19,19 @@ export interface BoundaryFeature {
   } & Record<string, unknown>;
 }
 
+//digunakan untuk state geoData di GenericMap.tsx dan GenericHeatMapLayer.tsx
 export interface GeoJSONData {
   type: "FeatureCollection";
   features: GeoJSON.Feature<GeoJSON.Point | GeoJSON.Polygon | GeoJSON.MultiPolygon, { aod_value?: number; pm25_value?: number }>[];
 }
 
+//digunakan untuk state boundaryData di peta dan heatmap
 export interface BoundaryGeoJSONData {
   type: "FeatureCollection";
   features: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon, { NAMOBJ: string } & Record<string, unknown>>[];
 }
 
+//digunakan untuk fetch, parsing data API PM2.5 dan menampilkan pada peta dan tabel di Calendar.tsx
 export interface PM25Data {
   id: number;
   station_name: string;
@@ -37,6 +42,7 @@ export interface PM25Data {
   station: number;
 }
 
+// digunakan untuk data cuaca
 export interface WeatherData {
   id: number;
   temperature: number;
@@ -49,6 +55,7 @@ export interface WeatherData {
   longitude: number;
 }
 
+//digunakan di Stasiun.tsx dan stasiunPM25 komponen untuk rendering marker dan popup.
 export interface StationData {
   station_name: string;
   latitude: number;
@@ -56,6 +63,7 @@ export interface StationData {
   pm25_value: number | null;
 }
 
+// tipe lanjutan untuk properties lengkap yang beragam sebagai tipe tambahan untuk pemakaian properti fitur GeoJSON
 export interface FeatureProperties {
   name: string;
   city?: string;

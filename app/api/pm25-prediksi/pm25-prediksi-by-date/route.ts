@@ -7,7 +7,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tanggal is required" }, { status: 400 });
     }
 
-    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api1/get-data-pm25bydate/` : "http://127.0.0.1:8000/api1/get-data-pm25bydate/";
+    const base = process.env.API_BASE_URL ?? "http://127.0.0.1:8000";
+        const apiUrl = `${base}/api1/get-data-pm25-prediksibydate/`;
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -20,12 +21,12 @@ export async function POST(request: Request) {
 
 
     return NextResponse.json(data, {
-      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store, max-age=0" },
+      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" },
     });
   } catch (error) {
-    console.error("PM25 History Proxy error:", error);
+    console.error("PM25 Prediksi by date error:", error);
     return NextResponse.json(
-      { error: "Gagal memuat data historis PM2.5 ", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Gagal memuat data prediksi PM2.5", details: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }
     );
   }

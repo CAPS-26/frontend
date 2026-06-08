@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 
+/** Data prediksi per stasiun (untuk kalender) */
 export async function POST(request: Request) {
   try {
     const { date } = await request.json();
     if (!date) {
-      return NextResponse.json({ error: "Date parameter is required" }, { status: 400 });
+      return NextResponse.json({ error: "Date is required" }, { status: 400 });
     }
 
-    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api2/weather/datapm25bydate/` : "http://127.0.0.1:8000/api2/weather/datapm25bydate/";
+    const base = process.env.API_BASE_URL ?? "http://127.0.0.1:8000";
+        const apiUrl = `${base}/api2/weather/datapm25-prediksi-bydate/`;
         const response = await fetch(apiUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ date }),
           cache: "no-store",
         });
@@ -21,10 +23,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("PM25 History Proxy error:", error);
-    return NextResponse.json(
-      { error: "Gagal memuat data historis PM2.5", message: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    console.error("PM25 Prediksi stasiun error:", error);
+    return NextResponse.json({ error: "Gagal memuat prediksi stasiun" }, { status: 500 });
   }
 }

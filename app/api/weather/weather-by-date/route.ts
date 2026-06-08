@@ -8,39 +8,24 @@ export async function POST(request: Request) {
     }
 
     const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api2/weather/weatherdatabydate/` : "http://127.0.0.1:8000/api2/weather/weatherdatabydate/";
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date }),
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        const rawText = await response.text();
+        const data = JSON.parse(rawText.replace(/NaN/g, "null").replace(/"0"/g, "null"));
 
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-      body: JSON.stringify({ date }),
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
-    }
-
-    const rawText = await response.text();
-    const cleanText = rawText.replace(/NaN/g, "null");
-    const data = JSON.parse(cleanText);
-    console.log("API Proxy Weather by date data sample:", JSON.stringify(data).slice(0, 300));
 
     return NextResponse.json(data, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "no-store, max-age=0",
-      },
+      headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store, max-age=0" },
     });
   } catch (error) {
     console.error("Weather History Proxy error:", error);
     return NextResponse.json(
-      {
-        error: "Gagal memuat data historis cuaca",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Gagal memuat data historis cuaca", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

@@ -2,7 +2,7 @@ import React from "react";
 import styles from "@/styles/heatmap.module.css";
 
 interface GradientLegendProps {
-  dataType: "aod" | "pm25-est";
+  dataType: "aod" | "pm25-est" | "pm25-pred";
 }
 
 const GradientLegend: React.FC<GradientLegendProps> = ({ dataType }) => {

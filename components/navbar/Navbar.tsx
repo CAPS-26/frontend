@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -7,13 +8,11 @@ import styles from "../../styles/navbar.module.css";
 const Navbar = () => {
   const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prev) => !prev);
-  };
-
-  const closeDropdown = () => {
+  const closeAll = () => {
     setIsDropdownOpen(false);
+    setIsMobileOpen(false);
   };
 
   const getTitle = (path: string) => {
@@ -22,6 +21,8 @@ const Navbar = () => {
         return "AOD";
       case "/pm25-estimasi":
         return "PM2.5 (Estimasi)";
+      case "/pm25-prediksi":
+        return "PM2.5 (Prediksi)";
       case "/pm25-aktual":
         return "PM2.5 (Aktual)";
       case "/calendar":
@@ -29,43 +30,63 @@ const Navbar = () => {
       case "/about":
         return "Tentang";
       default:
-        return "WebGIS PM2.5 dan AOD";
+        return "WebGIS PM2.5";
     }
   };
 
+  const mapLinks = [
+    { href: "/", label: "AOD" },
+    { href: "/pm25-estimasi", label: "PM2.5 (Estimasi)" },
+    { href: "/pm25-prediksi", label: "PM2.5 (Prediksi)" },
+    { href: "/pm25-aktual", label: "PM2.5 (Aktual)" },
+  ];
+
   return (
-    <div className={styles.navbar}>
+    <nav className={styles.navbar}>
       <div className={styles.left}>{getTitle(pathname)}</div>
 
-      <div className={styles.center}>
+      <button
+        type="button"
+        className={styles.mobileToggle}
+        aria-label="Menu"
+        aria-expanded={isMobileOpen}
+        onClick={() => setIsMobileOpen((v) => !v)}
+      >
+        {isMobileOpen ? "✕" : "☰"}
+      </button>
+
+      <div className={`${styles.center} ${isMobileOpen ? styles.centerOpen : ""}`}>
         <div className={styles.dropdown}>
-          <button onClick={toggleDropdown} className={styles.navLink}>
+          <button type="button" onClick={() => setIsDropdownOpen((v) => !v)} className={styles.navLink}>
             PETA ▾
           </button>
           {isDropdownOpen && (
             <div className={styles.dropdownMenu}>
-              <Link href="/" className={`${styles.dropdownItem} ${pathname === "/" ? styles.active : ""}`} onClick={closeDropdown}>
-                AOD
-              </Link>
-              <Link href="/pm25-estimasi" className={`${styles.dropdownItem} ${pathname === "/pm25-estimasi" ? styles.active : ""}`} onClick={closeDropdown}>
-                PM2.5 (Estimasi)
-              </Link>
-              <Link href="/pm25-aktual" className={`${styles.dropdownItem} ${pathname === "/pm25-aktual" ? styles.active : ""}`} onClick={closeDropdown}>
-                PM2.5 (Aktual)
-              </Link>
+              {mapLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`${styles.dropdownItem} ${pathname === link.href ? styles.active : ""}`}
+                  onClick={closeAll}
+                >
+                  {link.label}
+                </Link>
+              ))}
             </div>
           )}
         </div>
 
-        <Link href="/calendar" className={`${styles.navLink} ${pathname === "/calendar" ? styles.active : ""}`}>
+        <Link href="/calendar" className={`${styles.navLink} ${pathname === "/calendar" ? styles.active : ""}`} onClick={closeAll}>
           Kalender
         </Link>
-        <Link href="/about" className={`${styles.navLink} ${pathname === "/about" ? styles.active : ""}`}>
+        <Link href="/about" className={`${styles.navLink} ${pathname === "/about" ? styles.active : ""}`} onClick={closeAll}>
           Tentang
         </Link>
       </div>
-    </div>
+    </nav>
   );
 };
 
 export default Navbar;
+
+

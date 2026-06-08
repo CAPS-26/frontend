@@ -38,10 +38,10 @@ export const interpolatePM25Color = (value: number | null): string => {
 
   const ranges = [
     { max: 0, r: 0, g: 204, b: 0 },     
-    { max: 51, r: 1, g: 51, b: 255 },  
-    { max: 101, r: 255, g: 201, b: 0 }, 
-    { max: 200, r: 255, g: 0, b: 0 },   
-    { max: 300, r: 34, g: 34, b: 34 },  
+    { max: 15.4, r: 1, g: 51, b: 255 },  
+    { max: 55.4, r: 255, g: 201, b: 0 }, 
+    { max: 150.4, r: 255, g: 0, b: 0 },   
+    { max: 250.4, r: 34, g: 34, b: 34 },  
   ];
 
   for (let i = 0; i < ranges.length - 1; i++) {

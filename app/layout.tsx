@@ -27,7 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>{children}</body>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
