@@ -11,13 +11,13 @@ WebGIS PM2.5 adalah aplikasi web interaktif yang menyajikan data kualitas udara 
 
 ## Prasyarat
 
-Pastikan komputer/server Anda telah menginstal:
+Pastikan komputer/server telah menginstal:
 - Node.js (versi 18.x atau lebih baru)
 - npm, yarn, atau pnpm
 
 ## Konfigurasi Lingkungan
 
-Sebelum menjalankan aplikasi, Anda perlu menghubungkan *frontend* ini ke *backend* API utama. 
+Sebelum menjalankan aplikasi, perlu menghubungkan *frontend* ini ke *backend* API utama. 
 
 1. Buat file `.env.local` di *root directory* proyek ini (sejajar dengan file `package.json`).
 2. Tambahkan variabel `API_BASE_URL` yang menunjuk ke alamat backend Anda.
@@ -60,7 +60,3 @@ Jika Anda ingin men-deploy aplikasi ini ke server produksi:
    ```bash
    npm run start
    ```
-
-## Kontribusi
-
-Semua integrasi menggunakan API secara langsung. Komponen *dummy data* telah dibersihkan sepenuhnya sehingga aplikasi ini dijamin akan selalu bergantung pada keakuratan dan ketersediaan dari *Backend* server Anda.
