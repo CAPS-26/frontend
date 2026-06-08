@@ -1,55 +1,62 @@
-# WebGIS PM2.5 Frontend
+# Frontend Module
 
-WebGIS PM2.5 adalah aplikasi web interaktif yang menyajikan data kualitas udara (khususnya PM2.5) secara real-time, prediksi, dan estimasi berbasis lokasi spasial. Aplikasi ini dibangun menggunakan **Next.js** dan mengambil data dari backend API tersendiri.
+Aplikasi web interaktif (WebGIS) untuk memvisualisasikan data kualitas udara (PM2.5) dan cuaca secara real-time, prediksi, dan estimasi berbasis lokasi spasial untuk wilayah Jakarta.
 
-## Fitur Utama
+## Struktur Proyek
+```text
+frontend/
+├── app/                      # Next.js App Router (Halaman & Rute API Internal)
+│   ├── api/                  # Rute proxy internal untuk menghubungi Backend
+│   ├── pm25-aktual/          # Halaman peta PM2.5 aktual
+│   ├── pm25-estimasi/        # Halaman peta estimasi PM2.5
+│   ├── pm25-prediksi/        # Halaman peta prediksi PM2.5
+│   └── calendar/             # Halaman kalender historis & prediksi
+├── components/               # Komponen UI interaktif (React)
+│   ├── map/                  # Komponen peta Leaflet & Layer Spasial
+│   ├── navbar/               # Komponen navigasi utama
+│   └── calendar/             # Komponen visualisasi data kalender
+├── lib/                      # Utilitas dan konfigurasi
+│   ├── api/                  # Konfigurasi proxy fetch ke backend
+│   └── config.ts             # Pengaturan lingkungan global
+├── public/                   # Aset statis (gambar, ikon indikator)
+├── styles/                   # CSS Modules dan global CSS
+├── .env.example              # Contoh konfigurasi environment
+├── next.config.ts            # Konfigurasi aplikasi Next.js
+└── package.json              # Dependensi dan script Node.js
+```
 
-- **Peta PM2.5 Aktual:** Menampilkan kualitas udara berdasarkan stasiun secara real-time.
-- **Peta PM2.5 Estimasi:** Estimasi kualitas udara di berbagai titik.
-- **Peta PM2.5 Prediksi:** Prediksi kualitas udara untuk beberapa waktu ke depan.
-- **Data Cuaca & Kalender:** Informasi cuaca dan historis kualitas udara.
+## Menjalankan Secara Lokal (tanpa Docker)
 
-## Prasyarat
+### 1. Dependensi sistem
+Pastikan Anda telah menginstal:
+- **Node.js** (versi 18.x atau lebih baru disarankan)
+- **npm**, **yarn**, atau **pnpm** (pilih salah satu)
 
-Pastikan komputer/server telah menginstal:
-- Node.js (versi 18.x atau lebih baru)
-- npm, yarn, atau pnpm
+### 2. Lingkungan Node.js
+Buka terminal di dalam folder proyek ini dan jalankan instalasi dependensi:
+```bash
+npm install
+```
 
-## Konfigurasi Lingkungan
+### 3. Environment Variables (wajib)
+Aplikasi frontend membutuhkan konfigurasi `.env.local` untuk mengarahkan rute proxy internal menuju server backend yang sebenarnya.
 
-Sebelum menjalankan aplikasi, perlu menghubungkan *frontend* ini ke *backend* API utama. 
+```bash
+cp .env.example .env.local
+# Edit .env.local dengan nilai Anda
+```
 
-1. Buat file `.env.local` di *root directory* proyek ini (sejajar dengan file `package.json`).
-2. Tambahkan variabel `API_BASE_URL` yang menunjuk ke alamat backend Anda.
-   ```env
-   API_BASE_URL=http://127.0.0.1:8000
-   ```
-   *(Sesuaikan port dan IP dengan backend Anda)*
+| Variabel | Deskripsi |
+|---|---|
+| `API_BASE_URL` | Base URL untuk server backend (contoh: `http://127.0.0.1:8000`) |
 
-## Instalasi dan Menjalankan Proyek
-
-1. **Install dependensi:**
-   ```bash
-   npm install
-   # atau
-   yarn install
-   # atau
-   pnpm install
-   ```
-
-2. **Jalankan Development Server:**
-   ```bash
-   npm run dev
-   # atau
-   yarn dev
-   # atau
-   pnpm dev
-   ```
-
-3. Buka [http://localhost:3000](http://localhost:3000) di browser untuk melihat aplikasinya.
+### 4. Jalankan server pengembangan
+```bash
+npm run dev
+```
+Aplikasi frontend akan tersedia di http://localhost:3000
 
 ## Mem-build untuk Produksi
-
 Jika Anda ingin men-deploy aplikasi ini ke server produksi:
 
 1. **Jalankan perintah build:**
@@ -60,3 +67,24 @@ Jika Anda ingin men-deploy aplikasi ini ke server produksi:
    ```bash
    npm run start
    ```
+
+## Catatan Operasional
+- **Proxy API**: Frontend menggunakan fitur Server API Routes dari Next.js (`app/api/`) untuk meneruskan permintaan secara aman ke Backend utama (Django/FastAPI). Hal ini mencegah permasalahan CORS langsung pada browser klien.
+- **Peta Spasial**: Menggunakan `react-leaflet` untuk menampilkan data GeoJSON dinamis (titik stasiun maupun poligon estimasi AOD).
+- **Pengambilan Data**: Fetch data dari backend murni mengandalkan ketersediaan server API. Semua komponen *dummy data* telah dibersihkan secara permanen.
+
+## Internal API Routes (Proxy)
+Base URL dari sisi klien: `/api` (Hanya digunakan secara internal oleh komponen frontend)
+
+| Method | Path | Deskripsi (Proxy Tujuan Backend) |
+|---|---|---|
+| GET | `/aod/` | Proxy poligon AOD kemarin ke `/api1/get-data-aod/` |
+| POST | `/aod/aod-by-date/` | Proxy poligon AOD historis ke `/api1/get-data-aodbydate/` |
+| GET | `/pm25-aktual/` | Proxy titik PM2.5 aktual ke `/api1/get-data-pm25-aktual/` |
+| POST | `/pm25-aktual/pm25-aktual-by-date/` | Proxy historis PM2.5 ke `/api1/get-data-pm25-aktualbydate/` |
+| GET | `/pm25-est/` | Proxy estimasi poligon PM2.5 ke `/api1/get-data-pm25/` |
+| POST | `/pm25-est/pm25-est-by-date/` | Proxy estimasi PM2.5 historis ke `/api1/get-data-pm25bydate/` |
+| GET | `/pm25-prediksi/` | Proxy titik PM2.5 prediksi ke `/api1/get-data-pm25-prediksi/` |
+| POST | `/pm25-prediksi/pm25-prediksi-by-date/` | Proxy PM2.5 prediksi per tanggal ke `/api1/get-data-pm25-prediksibydate/` |
+| GET | `/weather/` | Proxy info cuaca terkini ke `/api2/weather/weatherdata-now/` |
+| POST | `/weather/weather-by-date/` | Proxy riwayat cuaca historis ke `/api2/weather/weatherdatabydate/` |
