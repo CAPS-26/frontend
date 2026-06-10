@@ -8,7 +8,10 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
-    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Server error" }));
+      return NextResponse.json(err, { status: response.status });
+    }
     const rawText = await response.text();
     const data = JSON.parse(rawText.replace(/NaN/g, "null").replace(/"0"/g, "null"));
 

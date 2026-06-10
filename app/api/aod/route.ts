@@ -8,7 +8,11 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
-    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Server error" }));
+      return NextResponse.json(err, { status: response.status,
+        headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store, max-age=0" } });
+    }
     const data = await response.json();
 
     return NextResponse.json(data, {
