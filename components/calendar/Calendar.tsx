@@ -5,27 +5,9 @@ import styles from "@/styles/calendar.module.css";
 import Image from "next/image";
 import { staticPM25Color } from "@/utils/color";
 import { formatLocalDate, getDayDataKind, isFutureDate } from "@/lib/date";
-interface PM25Data {
-  id: number;
-  station_name: string;
-  latitude: number;
-  longitude: number;
-  date: string;
-  pm25_value: number | null;
-  station: number;
-}
-
-interface WeatherData {
-  id: number;
-  temperature: number;
-  precipitation: number;
-  humidity: number;
-  wind_dir: number;
-  wind_speed: number;
-  station_name: string;
-  latitude: number;
-  longitude: number;
-}
+import { pm25Api, weatherApi } from "@/services";
+import { usePM25Store, useWeatherStore } from "@/stores";
+import type { PM25Data, WeatherData } from "@/app/types";
 
 interface CalendarProps {
   location?: string;
@@ -55,15 +37,14 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   const [selectedStation, setSelectedStation] = useState<string>(location || DEFAULT_STATION);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [isWeatherLoading, setIsWeatherLoading] = useState<boolean>(false);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const weatherStore = useWeatherStore();
+  const pm25Store = usePM25Store();
 
   useEffect(() => {
     if (location && location !== selectedStation) {
       setSelectedStation(location);
-      console.log(`Syncing selectedStation to prop location: ${location}`);
     }
   }, [location, selectedStation]);
 
@@ -89,11 +70,9 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     (day: number) => {
       const clickedDate = new Date(currentYear, currentMonth, day);
       setSelectedDate(clickedDate);
-      if (onDateChange) {
-        onDateChange(clickedDate);
-      }
+      onDateChange?.(clickedDate);
     },
-    [currentMonth, currentYear, onDateChange]
+    [currentMonth, currentYear, onDateChange],
   );
 
   const formatDate = useCallback((date: Date): string => {
@@ -109,39 +88,18 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   const fetchRealtimePM25Data = useCallback(async () => {
     try {
-      const response = await fetch("/api/pm25-aktual", { cache: "no-store" });
-      if (!response.ok) {
-        console.warn(`Failed to fetch real-time PM2.5 data: ${response.status}`);
-        return []; // Kembalikan array kosong jika gagal
-      }
-      const data = await response.json();
-      if (data.error) {
-        console.warn(`Error in real-time PM2.5 data: ${data.error}`);
-        return []; // Kembalikan array kosong jika ada error dari server
-      }
-      return Array.isArray(data) ? data : []; // Pastikan data adalah array
+      const data = await pm25Api.getActualLatest();
+      pm25Store.setActualData(data);
+      return Array.isArray(data) ? data : [];
     } catch (err) {
       console.error("Error fetching real-time PM2.5 data:", err);
-      return []; // Kembalikan array kosong jika terjadi error
+      return [];
     }
-  }, []);
+  }, [pm25Store]);
 
   const fetchHistoricalPM25Data = useCallback(async (date: string) => {
     try {
-      const response = await fetch("/api/pm25-aktual/pm25-aktual-by-date", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date }),
-      });
-      if (!response.ok) {
-        console.warn(`Failed to fetch historical PM2.5 data for ${date}: ${response.status}`);
-        return [];
-      }
-      const data = await response.json();
-      if (data.error) {
-        console.warn(`Error in historical PM2.5 data: ${data.error}`);
-        return [];
-      }
+      const data = await pm25Api.getActualByDate(date);
       return Array.isArray(data) ? data : [];
     } catch (err) {
       console.error(`Error fetching historical PM2.5 data for ${date}:`, err);
@@ -151,14 +109,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   const fetchPredictionPM25Data = useCallback(async (date: string) => {
     try {
-      const response = await fetch("/api/pm25-prediksi/stasiun-by-date", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date }),
-      });
-      if (!response.ok) return [];
-      const data = await response.json();
-      if (data.error) return [];
+      const data = await pm25Api.getPredictionByDate(date);
       return Array.isArray(data) ? data : [];
     } catch (err) {
       console.error(`Error fetching prediction for ${date}:`, err);
@@ -168,48 +119,32 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   const fetchWeatherData = useCallback(
     async (date: string) => {
-      setIsWeatherLoading(true);
-      setWeatherError(null);
+      weatherStore.setLoading(true);
+      weatherStore.setError(null);
       try {
-        const isToday = date === formatLocalDate(new Date()) && new Date(date).getDate() === new Date().getDate() && new Date(date).getMonth() === new Date().getMonth() && new Date(date).getFullYear() === new Date().getFullYear();
-
-        const url = isToday ? "/api/weather" : "/api/weather/weather-by-date";
-        const body = isToday ? undefined : JSON.stringify({ date });
-
-        const response = await fetch(url, {
-          method: isToday ? "GET" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body,
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          console.warn(`Failed to fetch weather data for ${date}: ${response.status}`);
-          throw new Error(`Gagal memuat data cuaca tanggal ${date}`);
-        }
-        const data = await response.json();
-        if (data.error) {
-          console.warn(`Error in weather data: ${data.error}`);
-          throw new Error(data.error || "Gagal memuat data cuaca");
-        }
+        const todayStr = formatLocalDate(new Date());
+        const isToday = date === todayStr;
+        const data = isToday
+          ? await weatherApi.getLatest()
+          : await weatherApi.getByDate(date);
+        const station = Array.isArray(data)
+          ? data.find((s: WeatherData) => s.station_name === selectedStation) || data[0]
+          : null;
+        weatherStore.setData(station || null);
         return data;
-      } catch (error) {
-        setWeatherError(error instanceof Error ? error.message : "Terjadi kesalahan saat mengambil data cuaca");
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Gagal memuat data cuaca";
+        weatherStore.setError(msg);
         return null;
       } finally {
-        setIsWeatherLoading(false);
+        weatherStore.setLoading(false);
       }
     },
-    []
+    [selectedStation, weatherStore],
   );
 
   useEffect(() => {
-    fetchWeatherData(formatLocalDate(selectedDate)).then((data) => {
-      if (data) {
-        const station = data.find((s: WeatherData) => s.station_name === selectedStation) || data[0];
-        setWeatherData(station);
-      }
-    });
+    fetchWeatherData(formatLocalDate(selectedDate));
   }, [selectedDate, selectedStation, fetchWeatherData]);
 
   const loadDataForMonth = useCallback(async () => {
@@ -222,7 +157,6 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
       const daysInMonth = getDaysInMonth(currentMonth, currentYear);
       const datesToFetch: string[] = [];
-
       const futureDatesToFetch: string[] = [];
 
       for (let day = 1; day <= daysInMonth; day++) {
@@ -254,7 +188,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     } catch (err) {
       console.error("Error loading PM2.5 data for month:", err);
       setError("Gagal memuat beberapa data PM2.5, tetapi kalender tetap ditampilkan.");
-      setPM25Data([]); // Tetap set array kosong untuk memastikan kalender dirender
+      setPM25Data([]);
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +207,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
       const stationData = source.find((item) => item.date === dateString && item.station_name === selectedStation);
       return stationData?.pm25_value ?? null;
     },
-    [pm25Data, predictionData, selectedStation]
+    [pm25Data, predictionData, selectedStation],
   );
 
   const getDayLabel = useCallback(
@@ -284,7 +218,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
       if (kind === "today") return "Hari ini";
       return "Aktual";
     },
-    []
+    [],
   );
 
   const generateCalendarData = useCallback(() => {
@@ -317,10 +251,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStation = e.target.value;
     setSelectedStation(newStation);
-    if (onStationChange) {
-      onStationChange(newStation);
-      console.log(`Dropdown changed to station: ${newStation}`);
-    }
+    onStationChange?.(newStation);
   };
 
   const calendarDays = generateCalendarData();
@@ -375,36 +306,11 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
           <span>Deskripsi</span>
         </div>
         {[
-          {
-            range: "0-15.4",
-            color: staticPM25Color(15.4),
-            label: "Baik",
-            desc: "Tingkat kualitas udara yang tidak memberikan efek bagi kesehatan manusia atau hewan dan tidak berpengaruh pada tumbuhan, bangunan ataupun nilai estetika",
-          },
-          {
-            range: "15.5-55.4",
-            color: staticPM25Color(55.4),
-            label: "Sedang",
-            desc: "Tingkat kualitas udara yang tidak berpengaruh pada kesehatan manusia ataupun hewan tetapi berpengaruh pada tumbuhan yang sensitif, dan nilai estetika",
-          },
-          {
-            range: "55.5-150.4",
-            color: staticPM25Color(150.4),
-            label: "Tidak Sehat",
-            desc: "Tingkat kualitas udara yang bersifat merugikan pada manusia ataupun kelompok hewan yang sensitif atau bisa menimbulkan kerusakan pada tumbuhan ataupun nilai estetika",
-          },
-          {
-            range: "150.5-250.4",
-            color: staticPM25Color(250.4),
-            label: "Sangat Tidak Sehat",
-            desc: "Tingkat kualitas udara yang dapat merugikan kesehatan pada sejumlah segmen populasi yang terpapar",
-          },
-          {
-            range: ">250.4",
-            color: staticPM25Color(250.5),
-            label: "Berbahaya",
-            desc: "Tingkat kualitas udara berbahaya yang secara umum dapat merugikan kesehatan yang serius pada populasi",
-          },
+          { range: "0-15.4", color: staticPM25Color(15.4), label: "Baik", desc: "Tingkat kualitas udara yang tidak memberikan efek bagi kesehatan manusia atau hewan dan tidak berpengaruh pada tumbuhan, bangunan ataupun nilai estetika" },
+          { range: "15.5-55.4", color: staticPM25Color(55.4), label: "Sedang", desc: "Tingkat kualitas udara yang tidak berpengaruh pada kesehatan manusia ataupun hewan tetapi berpengaruh pada tumbuhan yang sensitif, dan nilai estetika" },
+          { range: "55.5-150.4", color: staticPM25Color(150.4), label: "Tidak Sehat", desc: "Tingkat kualitas udara yang bersifat merugikan pada manusia ataupun kelompok hewan yang sensitif atau bisa menimbulkan kerusakan pada tumbuhan ataupun nilai estetika" },
+          { range: "150.5-250.4", color: staticPM25Color(250.4), label: "Sangat Tidak Sehat", desc: "Tingkat kualitas udara yang dapat merugikan kesehatan pada sejumlah segmen populasi yang terpapar" },
+          { range: ">250.4", color: staticPM25Color(250.5), label: "Berbahaya", desc: "Tingkat kualitas udara berbahaya yang secara umum dapat merugikan kesehatan yang serius pada populasi" },
         ].map((item, index) => (
           <div key={index} className={styles.legendItem}>
             <span>{item.range}</span>
@@ -432,7 +338,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
           </tr>
         </thead>
         <tbody>
-          {isWeatherLoading ? (
+          {weatherStore.isLoading ? (
             <tr>
               <td colSpan={5} className={styles.loadingRow}>
                 <div className="flex items-center justify-center gap-4">
@@ -441,19 +347,19 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                 </div>
               </td>
             </tr>
-          ) : weatherError ? (
+          ) : weatherStore.error ? (
             <tr>
               <td colSpan={5} className={styles.errorRow}>
-                {weatherError}
+                {weatherStore.error}
               </td>
             </tr>
-          ) : weatherData ? (
+          ) : weatherStore.data ? (
             <tr>
-              <td>{weatherData.temperature.toFixed(1)}</td>
-              <td>{weatherData.precipitation.toFixed(1)}</td>
-              <td>{weatherData.humidity.toFixed(1)}</td>
-              <td>{weatherData.wind_dir.toFixed(1)}</td>
-              <td>{weatherData.wind_speed.toFixed(1)}</td>
+              <td>{weatherStore.data.temperature.toFixed(1)}</td>
+              <td>{weatherStore.data.precipitation.toFixed(1)}</td>
+              <td>{weatherStore.data.humidity.toFixed(1)}</td>
+              <td>{weatherStore.data.wind_dir.toFixed(1)}</td>
+              <td>{weatherStore.data.wind_speed.toFixed(1)}</td>
             </tr>
           ) : (
             <tr>
@@ -499,25 +405,19 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
               <div className={styles.monthYearSelector}>
                 <select value={currentMonth} onChange={(e) => setCurrentMonth(parseInt(e.target.value))} className={styles.monthSelector}>
                   {MONTHS.map((month, index) => (
-                    <option key={month} value={index}>
-                      {month}
-                    </option>
+                    <option key={month} value={index}>{month}</option>
                   ))}
                 </select>
                 <select value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value))} className={styles.yearSelector}>
                   {Array.from({ length: 12 }, (_, i) => currentYear - 5 + i).map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
+                    <option key={year} value={year}>{year}</option>
                   ))}
                 </select>
               </div>
             </div>
             <div className={styles.calendarGrid}>
               {["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map((day) => (
-                <div key={day} className={styles.dayName}>
-                  {day.substring(0, 3)}
-                </div>
+                <div key={day} className={styles.dayName}>{day.substring(0, 3)}</div>
               ))}
               {calendarDays.map((dayData, index) => (
                 <div
@@ -532,12 +432,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                     <>
                       <div className={styles.dateNumber}>{dayData.day}</div>
                       <div className={styles.indikatorPMContainer}>
-                        <div
-                          className={styles.indikatorPM}
-                          style={{
-                            backgroundColor: staticPM25Color(dayData.pm25),
-                          }}
-                        >
+                        <div className={styles.indikatorPM} style={{ backgroundColor: staticPM25Color(dayData.pm25) }}>
                           <span className={styles.pmValue}>{dayData.pm25 !== null ? Math.round(dayData.pm25) : "-"}</span>
                         </div>
                         <div className={styles.dataLabel}>{getDayLabel(new Date(currentYear, currentMonth, dayData.day), dayData.pm25)}</div>

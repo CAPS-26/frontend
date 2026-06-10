@@ -8,15 +8,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Date is required" }, { status: 400 });
     }
 
-    const base = process.env.API_BASE_URL ?? "http://127.0.0.1:8000";
-        const apiUrl = `${base}/api2/weather/datapm25-prediksi-bydate/`;
+    const base = process.env.API_BASE_URL ?? "http://127.0.0.1:1963";
+        const apiUrl = `${base}/api/v1/weather/pm25/prediction/by-date/`;
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ date }),
           cache: "no-store",
         });
-        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Server error" }));
+      return NextResponse.json(err, { status: response.status });
+    }
+    // fallback(`Server error: ${response.status}`);
         const rawText = await response.text();
         const data = JSON.parse(rawText.replace(/NaN/g, "null").replace(/"0"/g, "null"));
 

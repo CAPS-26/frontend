@@ -7,14 +7,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tanggal is required" }, { status: 400 });
     }
 
-    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api1/get-data-pm25bydate/` : "http://127.0.0.1:8000/api1/get-data-pm25bydate/";
+    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api/v1/weather/pm25/actual/by-date/` : "http://127.0.0.1:1963/api/v1/weather/pm25/actual/by-date/";
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tanggal }),
           cache: "no-store",
         });
-        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Server error" }));
+      return NextResponse.json(err, { status: response.status });
+    }
+    // fallback(`Server error: ${response.status}`);
         const rawText = await response.text();
         const data = JSON.parse(rawText.replace(/NaN/g, "null").replace(/"0"/g, "null"));
 

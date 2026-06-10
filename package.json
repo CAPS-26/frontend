@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm run build:next",
+    "build": "bun run build:next",
     "build:next": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -20,6 +20,7 @@
     "@turf/union": "^7.2.0",
     "@types/leaflet.heat": "^0.2.4",
     "@xmldom/xmldom": "^0.8.10",
+    "axios": "^1.17.0",
     "canvas": "^2.11.2",
     "chart.js": "^4.4.7",
     "chroma-js": "^2.4.2",
@@ -47,7 +48,8 @@
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
     "simpleheat": "^0.4.0",
-    "xmldom": "^0.6.0"
+    "xmldom": "^0.6.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",

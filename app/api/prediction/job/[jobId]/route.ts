@@ -1,0 +1,24 @@
+import { NextResponse } from "next/server";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ jobId: string }> },
+) {
+  const { jobId } = await params;
+  const base = process.env.API_BASE_URL ?? "http://127.0.0.1:1963";
+  const apiUrl = `${base}/api/v1/ingestion/jobs/${jobId}`;
+  const response = await fetch(apiUrl, {
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    return NextResponse.json(
+      { error: `Job not found: ${response.status}` },
+      { status: response.status },
+    );
+  }
+  const data = await response.json();
+  return NextResponse.json(data, {
+    headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" },
+  });
+}
