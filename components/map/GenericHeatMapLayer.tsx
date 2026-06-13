@@ -343,7 +343,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, b
         const color = dataType === "aod" ? interpolateAODColor(value) : interpolatePM25Color(value);
         const x = Math.round((coords[0] - bbox[0]) / cellSize);
         const y = Math.round((bbox[3] - coords[1]) / cellSize);
-        ctx.fillStyle = color;
+        ctx.fillStyle = color; ctx.globalAlpha = 0.7;
         ctx.fillRect(x, y, 1, 1);
         validPoints++;
       });
