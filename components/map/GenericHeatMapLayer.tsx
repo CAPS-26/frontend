@@ -126,6 +126,10 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, b
   const minDateStr = dataType === "pm25-pred" ? todayStr : undefined;
 
   const cachedBoundaries = useMemo(() => {
+    if (dataType === "pm25-pred" && boundaryData) {
+      // For prediction, use the main boundary data so the heatmap covers all of Jakarta
+      return boundaryData as any;
+    }
     if (!geoData) {
       // console.log("DEBUG: cachedBoundaries - Tidak ada geoData");
       return turf.featureCollection([]);
@@ -154,7 +158,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, b
       .filter((f): f is GeoJSONTypes.Feature<GeoJSONTypes.Polygon | GeoJSONTypes.MultiPolygon> => f != null);
     // console.log("DEBUG: cachedBoundaries - Jumlah fitur valid:", validFeatures.length);
     return turf.featureCollection(validFeatures);
-  }, [geoData, dataType]);
+  }, [geoData, boundaryData, dataType]);
 
   useEffect(() => {
     // console.log("DEBUG: useEffect for spatialIndex - boundaryData:", !!boundaryData);
