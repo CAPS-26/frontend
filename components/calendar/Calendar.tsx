@@ -116,9 +116,20 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
   }, []);
 
-  const formatStationName = useCallback((name: string): string => {
-    return name.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-  }, []);
+  const STATION_LABELS: Record<string, string> = {
+  us_embassy_1: "US Embassy 1",
+  us_embassy_2: "US Embassy 2",
+  jakarta_gbk: "Jakarta GBK",
+  bundaran_hi: "Bundaran HI",
+  kelapa_gading: "Kelapa Gading",
+  jagakarsa: "Jagakarsa",
+  lubang_buaya: "Lubang Buaya",
+  kebun_jeruk: "Kebun Jeruk",
+};
+
+const formatStationName = (name: string): string => {
+  return STATION_LABELS[name] || name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
 
   const handleDateClick = useCallback(
     (day: number) => {

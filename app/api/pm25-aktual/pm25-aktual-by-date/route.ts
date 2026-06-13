@@ -7,11 +7,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Date parameter is required" }, { status: 400 });
     }
 
+    const [year, month, day] = date.split("-");
+    const formattedDate = `${day}-${month}-${year}`;
+
     const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api/v1/weather/pm25/actual/by-date/` : "https://api-capstone.thelunareix.my.id/api/v1/weather/pm25/actual/by-date/";
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
-          body: JSON.stringify({ date }),
+          body: JSON.stringify({ date: formattedDate }),
           cache: "no-store",
         });
         if (!response.ok) {

@@ -9,6 +9,21 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getBoundaryStyle } from "@/utils/map";
 
+const STATION_LABELS: Record<string, string> = {
+  us_embassy_1: "US Embassy 1",
+  us_embassy_2: "US Embassy 2",
+  jakarta_gbk: "Jakarta GBK",
+  bundaran_hi: "Bundaran HI",
+  kelapa_gading: "Kelapa Gading",
+  jagakarsa: "Jagakarsa",
+  lubang_buaya: "Lubang Buaya",
+  kebun_jeruk: "Kebun Jeruk",
+};
+
+const formatStationName = (name: string): string => {
+  return STATION_LABELS[name] || name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
@@ -73,7 +88,7 @@ const MapComponent = React.memo(
 
         if (station) {
           const popupContent = `
-            <div class="font-bold">Stasiun: ${station.station_name.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}</div>
+            <div class="font-bold">Stasiun: ${formatStationName(station.station_name)}</div>
             <div class="font-bold">PM2.5: ${pm25Value !== null && !isNaN(pm25Value) ? pm25Value.toFixed(2) : "Tidak tersedia"}</div>
             <div class="text-white font-semibold px-2 py-1 rounded mt-1 mb-1 inline-block" style="background-color: ${staticPM25Color(pm25Value)}">
               ${
@@ -153,7 +168,7 @@ const MapComponent = React.memo(
                 }}
               >
                 <Popup>
-                  <div className="font-bold">Stasiun: {station.station_name.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}</div>
+                  <div className="font-bold">Stasiun: {formatStationName(station.station_name)}</div>
                   <div className="font-bold">PM2.5: {pm25Value !== null && !isNaN(pm25Value) ? pm25Value.toFixed(2) : "Tidak tersedia"}</div>
                   <div className="text-white font-semibold px-2 py-1 rounded mt-1 mb-1 inline-block" style={{ backgroundColor: staticPM25Color(pm25Value) }}>
                     {pm25Value === null || isNaN(pm25Value)
