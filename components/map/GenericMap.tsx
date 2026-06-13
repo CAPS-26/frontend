@@ -276,6 +276,13 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
           fetchByDateUrl={fetchByDateUrl}
           maxFutureDays={maxFutureDays}
         />
+        {geoData && geoData.features.map((f: any, idx: number) => {
+          if (f.geometry && f.geometry.type === "Point") {
+            const coords = f.geometry.coordinates as [number, number];
+            return <Marker key={`pin-${idx}`} position={[coords[1], coords[0]]} icon={customIcon} />;
+          }
+          return null;
+        })}
         {markerPosition && <Marker position={markerPosition} icon={customIcon} />}
       </MapContainer>
     </div>
