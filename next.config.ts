@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    serverExternalPackages: ["leaflet", "@turf/turf", "rbush", "leaflet-geosearch"],
+    serverComponentsExternalPackages: ["leaflet", "@turf/turf", "rbush", "leaflet-geosearch"],
   },
 };
 
