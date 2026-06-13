@@ -7,11 +7,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tanggal is required" }, { status: 400 });
     }
 
-    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api/v1/weather/pm25/actual/by-date/` : "https://api-capstone.thelunareix.my.id/api/v1/weather/pm25/actual/by-date/";
+    const [year, month, day] = tanggal.split("-");
+    const formattedDate = `${day}-${month}-${year}`;
+
+    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api/v1/aod/pm25/polygon/by-date/` : "https://api-capstone.thelunareix.my.id/api/v1/aod/pm25/polygon/by-date/";
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tanggal }),
+          body: JSON.stringify({ tanggal: formattedDate }),
           cache: "no-store",
         });
         if (!response.ok) {
