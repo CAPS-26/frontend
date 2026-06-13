@@ -21,7 +21,6 @@
     "@types/leaflet.heat": "^0.2.4",
     "@xmldom/xmldom": "^0.8.10",
     "axios": "^1.17.0",
-    "canvas": "^2.11.2",
     "chart.js": "^4.4.7",
     "chroma-js": "^2.4.2",
     "esri-leaflet": "^3.0.16",
