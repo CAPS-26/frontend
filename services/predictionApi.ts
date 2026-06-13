@@ -15,24 +15,16 @@ export interface JobStatusResponse {
 
 const predictionApi = {
   getLatest: () =>
-    http.get<PM25Data[]>("/api/v1/weather/pm25/prediction/").then((r) => r.data),
+    http.get<PM25Data[]>("/api/pm25-prediksi").then((r) => r.data),
 
   getByDate: (tanggal: string) =>
-    http
-      .post<PM25Data[]>("/api/v1/weather/pm25/prediction/by-date/", {
-        date: tanggal,
-      })
-      .then((r) => r.data),
+    http.post<PM25Data[]>("/api/pm25-prediksi/stasiun-by-date", { date: tanggal }).then((r) => r.data),
 
   trigger: () =>
-    http
-      .post<TriggerPredictionResponse>("/api/v1/ingestion/pm25-prediction/trigger")
-      .then((r) => r.data),
+    http.post<TriggerPredictionResponse>("/api/prediction/trigger").then((r) => r.data),
 
   getJobStatus: (jobId: string) =>
-    http
-      .get<JobStatusResponse>(`/api/v1/ingestion/jobs/${jobId}`)
-      .then((r) => r.data),
+    http.get<JobStatusResponse>(`/api/prediction/job/${jobId}`).then((r) => r.data),
 };
 
 export default predictionApi;
