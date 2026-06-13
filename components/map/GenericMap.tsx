@@ -78,7 +78,7 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
       setError(null);
       setGeoData(null);
       try {
-        const body = date ? JSON.stringify({ tanggal: date }) : undefined;
+        const body = date ? JSON.stringify({ tanggal: date.split("-").reverse().join("-") }) : undefined;
         const response = await fetch(url, {
           method: date ? "POST" : "GET",
           headers: date ? { "Content-Type": "application/json" } : undefined,
