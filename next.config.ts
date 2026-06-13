@@ -5,10 +5,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ["leaflet", "@turf/turf", "rbush", "leaflet-geosearch"],
-  },
+  serverExternalPackages: ["leaflet", "@turf/turf", "rbush", "leaflet-geosearch"],
 };
 
 export default nextConfig;
-
