@@ -27,6 +27,10 @@ function getFirstDayOfMonth(month: number, year: number): number {
 
 const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 const DEFAULT_STATION = "bundaran_hi";
+const ALL_STATIONS = [
+  "us_embassy_1", "us_embassy_2", "jakarta_gbk", "bundaran_hi",
+  "kelapa_gading", "jagakarsa", "lubang_buaya", "kebun_jeruk",
+];
 
 const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, showRightPanel = true, splitViewContainer, onStationChange, onDateChange }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -77,7 +81,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     return all;
   }, [predictionResults]);
 
-  const isLoading = historicalResults.some((r) => r.isLoading) || predictionResults.some((r) => r.isLoading);
+  const hasData = pm25Data.length > 0 || predictionData.length > 0;
 
   const getPM25Value = useCallback(
     (date: Date) => {
@@ -146,8 +150,9 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   }, [currentMonth, currentYear, getPM25Value]);
 
   const stationNames = useMemo(() => {
-    const names = [...new Set([...pm25Data, ...predictionData].map((d) => d?.station_name).filter(Boolean))];
-    return names.length > 0 ? names : [DEFAULT_STATION];
+    const fromData = [...new Set([...pm25Data, ...predictionData].map((d) => d?.station_name).filter(Boolean))];
+    const merged = [...new Set([...ALL_STATIONS, ...fromData])];
+    return merged.length > 0 ? merged : ALL_STATIONS;
   }, [pm25Data, predictionData]);
 
   const selectedPMValue = getPM25Value(selectedDate);
@@ -232,7 +237,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
           <div className={styles.right}>
             <div className={styles.informationPM}>
               <div className={styles.qualityBox}>
-                {isLoading ? (
+                {!hasData ? (
                   <div className="flex items-center justify-center gap-4">
                     <div className={styles.spinner}></div>
                     <span style={{ color: "black" }}>Memuat data PM2.5...</span>
