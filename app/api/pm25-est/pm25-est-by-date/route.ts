@@ -7,7 +7,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tanggal is required" }, { status: 400 });
     }
 
-    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api/v1/weather/pm25/actual/by-date/` : "http://127.0.0.1:1963/api/v1/weather/pm25/actual/by-date/";
+    const apiUrl = process.env.API_BASE_URL ? `${process.env.API_BASE_URL}/api/v1/weather/pm25/actual/by-date/` : "https://api-capstone.thelunareix.my.id/api/v1/weather/pm25/actual/by-date/";
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

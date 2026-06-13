@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const base = process.env.API_BASE_URL ?? "http://127.0.0.1:1963";
+    const base = process.env.API_BASE_URL ?? "https://api-capstone.thelunareix.my.id";
     const apiUrl = `${base}/api/v1/weather/weather/`;
     const response = await fetch(apiUrl, {
       headers: { "Content-Type": "application/json" },

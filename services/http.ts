@@ -1,10 +1,8 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:1963";
+import axios, { AxiosError } from "axios";
 
 const http = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 15000,
+  baseURL: "",
+  timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });
 

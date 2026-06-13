@@ -7,7 +7,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "date is required" }, { status: 400 });
     }
 
-    const base = process.env.API_BASE_URL ?? "http://127.0.0.1:1963";
+    const base = process.env.API_BASE_URL ?? "https://api-capstone.thelunareix.my.id";
     const apiUrl = `${base}/api/v1/weather/pm25/prediction/by-date/`;
     const response = await fetch(apiUrl, {
       method: "POST",

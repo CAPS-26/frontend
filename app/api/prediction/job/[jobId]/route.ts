@@ -5,7 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ jobId: string }> },
 ) {
   const { jobId } = await params;
-  const base = process.env.API_BASE_URL ?? "http://127.0.0.1:1963";
+  const base = process.env.API_BASE_URL ?? "https://api-capstone.thelunareix.my.id";
   const apiUrl = `${base}/api/v1/ingestion/jobs/${jobId}`;
   const response = await fetch(apiUrl, {
     headers: { "Content-Type": "application/json" },

@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/v1/(.*)",
+      "destination": "https://api-capstone.thelunareix.my.id/api/v1/$1"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     }
