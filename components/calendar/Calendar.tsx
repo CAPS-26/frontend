@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { staticPM25Color } from "@/utils/color";
 import { formatLocalDate, getDayDataKind, isFutureDate } from "@/lib/date";
@@ -32,12 +32,24 @@ const ALL_STATIONS = [
 ];
 
 const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, showRightPanel = true, splitViewContainer, onStationChange, onDateChange }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  // Initialize with 0/null to avoid SSR/client hydration mismatch (new Date() differs server vs client timezone)
+  const [currentMonth, setCurrentMonth] = useState(0);
+  const [currentYear, setCurrentYear] = useState(2026);
   const [selectedStation, setSelectedStation] = useState<string>(location || DEFAULT_STATION);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  // null initial to avoid hydration mismatch from new Date() on server
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const selectedDateStr = formatLocalDate(selectedDate);
+  // Set date/month/year on client only to avoid SSR mismatch
+  useEffect(() => {
+    const now = new Date();
+    setCurrentMonth(now.getMonth());
+    setCurrentYear(now.getFullYear());
+    setSelectedDate(now);
+    setIsMounted(true);
+  }, []);
+
+  const selectedDateStr = selectedDate ? formatLocalDate(selectedDate) : formatLocalDate(new Date());
   const today = new Date();
   const todayStr = formatLocalDate(today);
 
@@ -116,6 +128,11 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     [currentMonth, currentYear, onDateChange],
   );
 
+  // Keep location prop in sync with selectedStation
+  useEffect(() => {
+    if (location) setSelectedStation(location);
+  }, [location]);
+
   const getDayLabel = useCallback((date: Date, pm25: number | null): string => {
     if (pm25 === null) return "No Data";
     const kind = getDayDataKind(date);
@@ -142,16 +159,11 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
     return merged.length > 0 ? merged : ALL_STATIONS;
   }, [pm25Data, predictionData]);
 
-  const selectedPMValue = getPM25Value(selectedDate);
+  // Derive an always-valid display date for rendering
+  const effectiveDate = selectedDate ?? new Date();
+
+  const selectedPMValue = getPM25Value(effectiveDate);
   const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
-
-  const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStation = e.target.value;
-    setSelectedStation(newStation);
-    onStationChange?.(newStation);
-  };
-
-  const weatherStation = (Array.isArray(weatherData) ? weatherData.find((s: WeatherData) => s.station_name === selectedStation) : null) || (Array.isArray(weatherData) ? weatherData[0] : null);
 
   const containerClass = isSplitView
     ? `h-full overflow-y-auto bg-transparent p-0 mt-0 ${splitViewContainer || ""}`
@@ -163,6 +175,26 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   const leftClass = isSplitView ? "w-full" : "lg:col-span-7 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm";
   const rightClass = isSplitView ? "w-full" : "lg:col-span-5 flex flex-col gap-6";
+
+  // Render nothing until mounted to prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className={containerClass}>
+        <div className="flex items-center justify-center min-h-[300px]">
+          <div className="w-8 h-8 rounded-full border-4 border-primary-blue/30 border-t-primary-blue animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStation = e.target.value;
+    setSelectedStation(newStation);
+    onStationChange?.(newStation);
+  };
+
+  const weatherStation = (Array.isArray(weatherData) ? weatherData.find((s: WeatherData) => s.station_name === selectedStation) : null) || (Array.isArray(weatherData) ? weatherData[0] : null);
+
 
   const getHeroCardClasses = (value: number | null): string => {
     if (value === null || isNaN(value)) {
@@ -230,15 +262,15 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
           <div className="mb-4 space-y-2 pb-4 border-b border-gray-50">
             <h2 className="text-lg font-bold text-gray-800 flex flex-wrap items-center gap-2 leading-tight">
               <span>Data PM2.5 pada</span>
-              <span className="text-primary-blue font-extrabold">{formatDate(selectedDate)}</span>
+              <span className="text-primary-blue font-extrabold">{formatDate(effectiveDate)}</span>
               <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                getDayDataKind(selectedDate) === "future" 
+                getDayDataKind(effectiveDate) === "future" 
                   ? "bg-purple-50 text-purple-700 border border-purple-100" 
-                  : getDayDataKind(selectedDate) === "today" 
+                  : getDayDataKind(effectiveDate) === "today" 
                     ? "bg-blue-50 text-blue-700 border border-blue-100" 
                     : "bg-emerald-50 text-emerald-700 border border-emerald-100"
               }`}>
-                {getDayDataKind(selectedDate) === "future" ? "Prediksi (LSTM)" : getDayDataKind(selectedDate) === "today" ? "Hari ini (Aktual)" : "Aktual"}
+                {getDayDataKind(effectiveDate) === "future" ? "Prediksi (LSTM)" : getDayDataKind(effectiveDate) === "today" ? "Hari ini (Aktual)" : "Aktual"}
               </span>
             </h2>
             
@@ -260,7 +292,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
               ))}
               
               {calendarDays.map((dayData, index) => {
-                const isSelected = dayData.day && selectedDate.getDate() === dayData.day && selectedDate.getMonth() === currentMonth && selectedDate.getFullYear() === currentYear;
+                const isSelected = dayData.day && effectiveDate.getDate() === dayData.day && effectiveDate.getMonth() === currentMonth && effectiveDate.getFullYear() === currentYear;
                 const isToday = isCurrentMonth && dayData.day === today.getDate();
                 const dayKind = dayData.day ? getDayDataKind(new Date(currentYear, currentMonth, dayData.day)) : null;
                 const isFuture = dayKind === "future";
@@ -315,7 +347,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                                 ? "text-emerald-600"
                                 : "text-gray-400"
                           }`}>
-                            {getDayLabel(new Date(currentYear, currentMonth, dayData.day), dayData.pm25)}
+                            {getDayLabel(new Date(currentYear, currentMonth, dayData.day!), dayData.pm25)}
                           </span>
                         </div>
                       </>
@@ -404,7 +436,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                   Data Parameter Cuaca
                 </h3>
                 <span className="text-xs font-semibold text-gray-500">
-                  {selectedDate.getDate() === today.getDate() && selectedDate.getMonth() === today.getMonth() && selectedDate.getFullYear() === today.getFullYear() ? "Hari Ini" : formatDate(selectedDate)}
+                  {effectiveDate.getDate() === today.getDate() && effectiveDate.getMonth() === today.getMonth() && effectiveDate.getFullYear() === today.getFullYear() ? "Hari Ini" : formatDate(effectiveDate)}
                 </span>
               </div>
 

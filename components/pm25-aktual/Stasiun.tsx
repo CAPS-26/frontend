@@ -218,7 +218,8 @@ const StasiunPM25 = () => {
   const [boundaryJakarta, setBoundaryJakarta] = useState<BoundaryGeoJSONData | null>(null);
   const [isSplitView, setIsSplitView] = useState(false);
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  // Use null initial state to avoid SSR/client hydration mismatch from new Date()
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
 
@@ -358,12 +359,21 @@ const StasiunPM25 = () => {
 
   useEffect(() => {
     setIsClient(true);
+    // Set selectedDate on client only to avoid hydration mismatch
+    setSelectedDate(new Date());
     fetchRealtimeData();
   }, [fetchRealtimeData]);
 
   useEffect(() => {
-    fetchHistoricalData(selectedDate);
-  }, [selectedDate, fetchHistoricalData]);
+    // Only fetch historical data once selectedDate is set (client-side) and it's not today
+    if (!selectedDate) return;
+    const todayStr = formatLocalDate(new Date());
+    const selectedStr = formatLocalDate(selectedDate);
+    // Skip the initial mount fetch for today (fetchRealtimeData already handles it)
+    if (selectedStr !== todayStr) {
+      fetchHistoricalData(selectedDate);
+    }
+  }, [selectedDate, fetchHistoricalData, formatLocalDate]);
 
   useEffect(() => {
     return () => {
@@ -449,6 +459,7 @@ const StasiunPM25 = () => {
       if (prev) {
         setSelectedStation(null);
         activeMarkerRef.current = null;
+        // Reset to today - safe since this only runs on client
         setSelectedDate(new Date());
         fetchRealtimeData();
         console.log("Split view closed, resetting selected station, marker, and date to today");
@@ -483,6 +494,8 @@ const StasiunPM25 = () => {
     setShowInfoPopup(false);
   };
 
+  const effectiveDate = selectedDate ?? new Date();
+
   const memoizedMap = useMemo(
     () => (
       <MapComponent
@@ -493,12 +506,13 @@ const StasiunPM25 = () => {
         getWeatherForStation={getWeatherForStation}
         handleMarkerClick={handleMarkerClick}
         mapRef={mapRef}
-        selectedDate={selectedDate}
+        selectedDate={effectiveDate}
         selectedStation={selectedStation}
         activeMarkerRef={activeMarkerRef}
       />
     ),
-    [stations, historicalData, boundaryJakarta, getIconByPM25, getWeatherForStation, handleMarkerClick, selectedDate, selectedStation]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stations, historicalData, boundaryJakarta, getIconByPM25, getWeatherForStation, handleMarkerClick, effectiveDate, selectedStation]
   );
 
   if (!isClient) {
