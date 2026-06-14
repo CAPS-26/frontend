@@ -324,34 +324,57 @@ const StasiunPM25 = () => {
         return;
       }
 
+      // Clear stale data immediately so old markers don't linger
+      setHistoricalData({ pm25: [], weather: [] });
+      setError(null);
+
+      // Fetch PM2.5 — treat 404 as "no data" (not an app error)
       try {
-        const [pm25Response, weatherResponse] = await Promise.all([
-          fetch("/api/pm25-aktual/pm25-aktual-by-date", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ date: dateString }),
-          }),
-          fetch("/api/weather/weather-by-date", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ date: dateString }),
-          }),
-        ]);
+        const pm25Response = await fetch("/api/pm25-aktual/pm25-aktual-by-date", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: dateString }),
+        });
 
-        if (!pm25Response.ok) throw new Error(`Terjadi kesalahan saat memuat data PM2.5 untuk tanggal ${dateString}`);
-        const pm25Data = await pm25Response.json();
-        if (pm25Data.error) throw new Error(pm25Data.error || "Gagal memuat data historis PM2.5");
-        setHistoricalData((prev) => ({ ...prev, pm25: Array.isArray(pm25Data) ? pm25Data : [] }));
-
-        if (!weatherResponse.ok) throw new Error(`Terjadi kesalahan saat memuat data cuaca untuk tanggal ${dateString}`);
-        const weatherData = await weatherResponse.json();
-        if (weatherData.error) throw new Error(weatherData.error || "Gagal memuat data historis cuaca");
-        setHistoricalData((prev) => ({ ...prev, weather: Array.isArray(weatherData) ? weatherData : [] }));
-
-        setError(null);
+        if (pm25Response.status === 404) {
+          // No data for this date — show empty state, not an error
+          setHistoricalData((prev) => ({ ...prev, pm25: [] }));
+        } else if (!pm25Response.ok) {
+          console.warn(`PM2.5 fetch returned ${pm25Response.status} for ${dateString}`);
+          setHistoricalData((prev) => ({ ...prev, pm25: [] }));
+        } else {
+          const pm25Data = await pm25Response.json();
+          setHistoricalData((prev) => ({
+            ...prev,
+            pm25: Array.isArray(pm25Data) ? pm25Data : [],
+          }));
+        }
       } catch (err) {
-        console.error("Terjadi kesalahan saat memuat data historis", err);
-        setError((err as Error).message || "Terjadi kesalahan saat memuat data historis");
+        console.error("PM2.5 historical fetch failed:", err);
+        setHistoricalData((prev) => ({ ...prev, pm25: [] }));
+      }
+
+      // Fetch weather — also graceful, weather missing is non-fatal
+      try {
+        const weatherResponse = await fetch("/api/weather/weather-by-date", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: dateString }),
+        });
+
+        if (weatherResponse.ok) {
+          const weatherData = await weatherResponse.json();
+          setHistoricalData((prev) => ({
+            ...prev,
+            weather: Array.isArray(weatherData) ? weatherData : [],
+          }));
+        } else {
+          // Weather 404/error is non-fatal — markers still render, popup shows "no weather"
+          setHistoricalData((prev) => ({ ...prev, weather: [] }));
+        }
+      } catch (err) {
+        console.warn("Weather historical fetch failed (non-fatal):", err);
+        setHistoricalData((prev) => ({ ...prev, weather: [] }));
       }
     },
     [formatLocalDate, fetchRealtimeData]
@@ -552,7 +575,21 @@ const StasiunPM25 = () => {
         <div className={`flex w-full h-screen ${isSplitView ? "flex-row" : "flex-col"}`}>
           <div className={`${isSplitView ? "w-1/2" : "w-full"} h-full relative`} ref={containerRef}>
             {memoizedMap}
-            
+
+            {/* Empty state overlay — shown when selected historical date has no PM2.5 data */}
+            {isClient && selectedDate && formatLocalDate(selectedDate) !== formatLocalDate(new Date()) && historicalData.pm25.length === 0 && !loading && (
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1050] bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-100 flex flex-col items-center gap-3 max-w-xs text-center">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">📭</div>
+                <div>
+                  <p className="text-sm font-bold text-gray-700">Data tidak tersedia</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Tidak ada data PM2.5 aktual untuk tanggal <span className="font-semibold">{selectedDate.getDate()}/{selectedDate.getMonth() + 1}/{selectedDate.getFullYear()}</span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+
             {/* Information Button */}
             <div className="absolute bottom-[13rem] left-4 z-[1000] bg-white/95 backdrop-blur-sm px-3.5 py-2.5 rounded-xl shadow-lg border border-gray-150 flex items-center gap-2 cursor-pointer hover:bg-slate-50 transition-all duration-200" onClick={handleInfoClick}>
               <svg className="w-4 h-4 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
