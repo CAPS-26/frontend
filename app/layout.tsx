@@ -2,6 +2,14 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sistem Pemantauan PM2.5 dan AOD Jakarta",
+  description: "Platform WebGIS terintegrasi untuk memantau, memetakan, dan memprediksi konsentrasi polusi udara PM2.5 serta Aerosol Optical Depth (AOD) di wilayah Jakarta dengan dukungan Deep Learning LSTM dan analisis spasial.",
+  keywords: ["PM2.5", "AOD", "Polusi Udara", "Jakarta", "WebGIS", "LSTM", "Deep Learning", "Kualitas Udara"],
+};
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

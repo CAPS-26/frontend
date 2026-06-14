@@ -19,7 +19,50 @@ const customIcon = L.icon({
   popupAnchor: [0, -38],
 });
 
-const createModernPinpoint = (value: number | null, label: string) => {
+const STATION_LABELS: Record<string, string> = {
+  us_embassy_1: "US Embassy 1",
+  us_embassy_2: "US Embassy 2",
+  jakarta_gbk: "Jakarta GBK",
+  bundaran_hi: "Bundaran HI",
+  kelapa_gading: "Kelapa Gading",
+  jagakarsa: "Jagakarsa",
+  lubang_buaya: "Lubang Buaya",
+  kebun_jeruk: "Kebun Jeruk",
+};
+
+const STATION_COORDS: Record<string, [number, number]> = {
+  "us_embassy_1": [-6.1811056, 106.8279877],
+  "us_embassy_2": [-6.2366587, 106.7931975],
+  "jakarta_gbk": [-6.2155, 106.803],
+  "bundaran_hi": [-6.19466, 106.8235],
+  "kelapa_gading": [-6.1535777, 106.910887],
+  "jagakarsa": [-6.35693, 106.80367],
+  "lubang_buaya": [-6.28889, 106.90919],
+  "kebun_jeruk": [-6.20737, 106.7525],
+};
+
+const formatStationName = (name: string): string => {
+  return STATION_LABELS[name] || name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+const getNearestStationName = (latlng: L.LatLng): string => {
+  let closestName = "Stasiun";
+  let minDist = Infinity;
+  for (const [name, coords] of Object.entries(STATION_COORDS)) {
+    const dist = latlng.distanceTo(L.latLng(coords[0], coords[1]));
+    if (dist < minDist) {
+      minDist = dist;
+      closestName = name;
+    }
+  }
+  return closestName;
+};
+
+const createModernPinpoint = (value: number | null, label: string, dataType: MapDataType) => {
+  const formattedText = value !== null 
+    ? (dataType === "aod" ? value.toFixed(2) : value.toFixed(0)) 
+    : "-";
+
   return L.divIcon({
     className: "custom-modern-pinpoint",
     html: `
@@ -48,7 +91,7 @@ const createModernPinpoint = (value: number | null, label: string) => {
           white-space: nowrap;
           pointer-events: none;
         ">
-          ${value !== null ? value.toFixed(0) : "-"}
+          ${formattedText}
         </div>
       </div>
     `,
@@ -57,6 +100,7 @@ const createModernPinpoint = (value: number | null, label: string) => {
     popupAnchor: [0, -36],
   });
 };
+
 
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
@@ -326,30 +370,71 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
           fetchByDateUrl={fetchByDateUrl}
           maxFutureDays={maxFutureDays}
         />
-        {dataType === "pm25-pred" && geoData && geoData.features.map((feature, index) => {
-          if (feature.geometry.type !== "Point") return null;
-          const coords = feature.geometry.coordinates;
-          const latlng = L.latLng(coords[1], coords[0]);
-          const value = feature.properties?.pm25_value ?? null;
-          const name = (feature.properties as any)?.station_name ?? "Stasiun";
-          const icon = createModernPinpoint(value, name);
+        {geoData && geoData.features.map((feature, index) => {
+          let latlng: L.LatLng | null = null;
+          if (feature.geometry.type === "Point") {
+            const coords = feature.geometry.coordinates;
+            latlng = L.latLng(coords[1], coords[0]);
+          } else if (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon") {
+            try {
+              const centroid = turf.centroid(feature as any);
+              const coords = centroid.geometry.coordinates;
+              latlng = L.latLng(coords[1], coords[0]);
+            } catch (err) {
+              console.error("Error calculating centroid:", err);
+              return null;
+            }
+          }
+          if (!latlng) return null;
+
+          const value = dataType === "aod" ? (feature.properties as any)?.aod_value ?? null : (feature.properties as any)?.pm25_value ?? null;
+          const rawName = (feature.properties as any)?.station_name ?? null;
+          const name = rawName || getNearestStationName(latlng);
+          const icon = createModernPinpoint(value, name, dataType);
+          const formattedName = formatStationName(name);
 
           return (
             <Marker key={index} position={latlng} icon={icon}>
               <Popup>
                 <div style={{ fontFamily: "var(--font-poppins)", padding: "4px", color: "#1f2937" }}>
-                  <div style={{ fontWeight: 800, fontSize: "14px", marginBottom: "2px" }}>Stasiun: {name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</div>
-                  <div style={{ fontWeight: 750, fontSize: "13px", color: "#4b5563", marginBottom: "6px" }}>Prediksi PM2.5: {value !== null ? `${value.toFixed(1)} µg/m³` : "Tidak tersedia"}</div>
-                  <div style={{ color: "white", fontWeight: 800, fontSize: "11px", padding: "4px 8px", borderRadius: "6px", display: "inline-block", backgroundColor: interpolatePM25Color(value) }}>
-                    Kualitas: {
-                      value === null ? "Tidak tersedia"
-                      : value <= 15.4 ? "BAIK"
-                      : value <= 55.4 ? "SEDANG"
-                      : value <= 150.4 ? "TIDAK SEHAT"
-                      : value <= 250.4 ? "SANGAT TIDAK SEHAT"
-                      : "BERBAHAYA"
-                    }
-                  </div>
+                  <div style={{ fontWeight: 800, fontSize: "14px", marginBottom: "2px" }}>Stasiun: {formattedName}</div>
+                  
+                  {dataType === "aod" ? (
+                    <>
+                      <div style={{ fontWeight: 750, fontSize: "13px", color: "#4b5563", marginBottom: "6px" }}>AOD: {value !== null ? value.toFixed(4) : "Tidak tersedia"}</div>
+                      <div style={{ color: "white", fontWeight: 800, fontSize: "11px", padding: "4px 8px", borderRadius: "6px", display: "inline-block", backgroundColor: interpolateAODColor(value) }}>
+                        Nilai: {value !== null ? value.toFixed(4) : "Tidak tersedia"}
+                      </div>
+                    </>
+                  ) : dataType === "pm25-est" ? (
+                    <>
+                      <div style={{ fontWeight: 750, fontSize: "13px", color: "#4b5563", marginBottom: "6px" }}>Estimasi PM2.5: {value !== null ? `${value.toFixed(1)} µg/m³` : "Tidak tersedia"}</div>
+                      <div style={{ color: "white", fontWeight: 800, fontSize: "11px", padding: "4px 8px", borderRadius: "6px", display: "inline-block", backgroundColor: interpolatePM25Color(value) }}>
+                        Kualitas: {
+                          value === null ? "Tidak tersedia"
+                          : value <= 15.4 ? "BAIK"
+                          : value <= 55.4 ? "SEDANG"
+                          : value <= 150.4 ? "TIDAK SEHAT"
+                          : value <= 250.4 ? "SANGAT TIDAK SEHAT"
+                          : "BERBAHAYA"
+                        }
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontWeight: 750, fontSize: "13px", color: "#4b5563", marginBottom: "6px" }}>Prediksi PM2.5: {value !== null ? `${value.toFixed(1)} µg/m³` : "Tidak tersedia"}</div>
+                      <div style={{ color: "white", fontWeight: 800, fontSize: "11px", padding: "4px 8px", borderRadius: "6px", display: "inline-block", backgroundColor: interpolatePM25Color(value) }}>
+                        Kualitas: {
+                          value === null ? "Tidak tersedia"
+                          : value <= 15.4 ? "BAIK"
+                          : value <= 55.4 ? "SEDANG"
+                          : value <= 150.4 ? "TIDAK SEHAT"
+                          : value <= 250.4 ? "SANGAT TIDAK SEHAT"
+                          : "BERBAHAYA"
+                        }
+                      </div>
+                    </>
+                  )}
                 </div>
               </Popup>
             </Marker>
