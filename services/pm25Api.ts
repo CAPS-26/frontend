@@ -8,11 +8,17 @@ const pm25Api = {
   getActualByDate: (date: string) =>
     http.post<PM25Data[]>("/api/pm25-aktual/pm25-aktual-by-date", { date }).then((r) => r.data),
 
+  getActualHistory: () =>
+    http.get<PM25Data[]>("/api/pm25-aktual/history").then((r) => r.data),
+
   getPredictionLatest: () =>
     http.get<PM25Data[]>("/api/pm25-prediksi").then((r) => r.data),
 
   getPredictionByDate: (date: string) =>
     http.post<PM25Data[]>("/api/pm25-prediksi/stasiun-by-date", { date }).then((r) => r.data),
+
+  getPredictionHistory: () =>
+    http.get<PM25Data[]>("/api/pm25-prediksi/history").then((r) => r.data),
 };
 
 export default pm25Api;

@@ -80,3 +80,20 @@ export function usePredictionBatch(dates: string[]) {
     })),
   });
 }
+
+export function usePM25ActualHistory() {
+  return useQuery({
+    queryKey: ["pm25", "actual", "history"],
+    queryFn: () => pm25Api.getActualHistory(),
+    staleTime: 10 * 60_000,
+  });
+}
+
+export function usePM25PredictionHistory() {
+  return useQuery({
+    queryKey: ["pm25", "prediction", "history"],
+    queryFn: () => pm25Api.getPredictionHistory(),
+    staleTime: 10 * 60_000,
+  });
+}
+

@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { staticPM25Color } from "@/utils/color";
 import { formatLocalDate, getDayDataKind, isFutureDate } from "@/lib/date";
-import { usePM25Actual, usePM25Batch, usePredictionBatch, useWeatherByDate } from "@/hooks/queries";
+import { usePM25Actual, usePM25ActualHistory, usePM25PredictionHistory, useWeatherByDate } from "@/hooks/queries";
 import type { PM25Data, WeatherData } from "@/app/types";
 
 interface CalendarProps {
@@ -44,41 +44,18 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   // TanStack Query hooks — auto cache, dedup, retry
   const { data: realtimeData = [] } = usePM25Actual();
 
-  const monthDates = useMemo(() => {
-    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-    const dates: { date: Date; str: string; kind: string }[] = [];
-    for (let day = 1; day <= daysInMonth; day++) {
-      const d = new Date(currentYear, currentMonth, day);
-      const ds = formatLocalDate(d);
-      if (ds === todayStr) continue;
-      dates.push({ date: d, str: ds, kind: isFutureDate(d) ? "future" : "past" });
-    }
-    return dates;
-  }, [currentMonth, currentYear, todayStr]);
-
-  const pastDates = monthDates.filter((d) => d.kind === "past").map((d) => d.str);
-  const futureDates = monthDates.filter((d) => d.kind === "future").map((d) => d.str);
-
-  const historicalResults = usePM25Batch(pastDates);
-  const predictionResults = usePredictionBatch(futureDates);
+  const { data: historicalData = [] } = usePM25ActualHistory();
+  const { data: predictionData = [] } = usePM25PredictionHistory();
   const { data: weatherData } = useWeatherByDate(selectedDateStr);
 
   // Collect PM2.5 data from all queries
   const pm25Data = useMemo(() => {
     const all: PM25Data[] = Array.isArray(realtimeData) ? [...realtimeData] : [];
-    for (const r of historicalResults) {
-      if (r.data && Array.isArray(r.data)) all.push(...r.data);
+    if (Array.isArray(historicalData)) {
+      all.push(...historicalData);
     }
     return all;
-  }, [realtimeData, historicalResults]);
-
-  const predictionData = useMemo(() => {
-    const all: PM25Data[] = [];
-    for (const r of predictionResults) {
-      if (r.data && Array.isArray(r.data)) all.push(...r.data);
-    }
-    return all;
-  }, [predictionResults]);
+  }, [realtimeData, historicalData]);
 
   const hasData = pm25Data.length > 0 || predictionData.length > 0;
 
