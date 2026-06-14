@@ -275,7 +275,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                           : isToday
                             ? "border-emerald-500 bg-emerald-50/10 shadow-sm"
                             : isFuture
-                              ? "border-purple-200 border-dashed bg-purple-50/20 hover:border-purple-300 hover:bg-purple-50/40"
+                              ? "border-purple-300 border-dashed bg-purple-50/30 hover:border-purple-400 hover:bg-purple-50/50"
                               : "border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm"
                         : "bg-gray-50/50 border-transparent opacity-40 cursor-not-allowed"
                     }`}
@@ -290,7 +290,9 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                               ? "text-primary-blue" 
                               : isToday 
                                 ? "text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100" 
-                                : "text-gray-700"
+                                : isFuture
+                                  ? "text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-md border border-purple-100"
+                                  : "text-gray-700"
                           }`}>
                             {dayData.day}
                           </span>
@@ -306,7 +308,13 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
                           >
                             {dayData.pm25 !== null ? Math.round(dayData.pm25) : "-"}
                           </div>
-                          <span className="text-[8px] sm:text-[9px] font-bold text-gray-400">
+                          <span className={`text-[8px] sm:text-[9px] font-bold ${
+                            isFuture
+                              ? "text-purple-600"
+                              : isToday
+                                ? "text-emerald-600"
+                                : "text-gray-400"
+                          }`}>
                             {getDayLabel(new Date(currentYear, currentMonth, dayData.day), dayData.pm25)}
                           </span>
                         </div>
