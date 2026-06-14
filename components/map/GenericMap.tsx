@@ -19,10 +19,50 @@ const customIcon = L.icon({
   popupAnchor: [0, -38],
 });
 
+const createModernPinpoint = (value: number | null, label: string) => {
+  return L.divIcon({
+    className: "custom-modern-pinpoint",
+    html: `
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer;">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 3px 4px rgba(0, 91, 227, 0.35));">
+          <defs>
+            <linearGradient id="pinpoint-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#239CFF" />
+              <stop offset="100%" stop-color="#005BE3" />
+            </linearGradient>
+          </defs>
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="url(#pinpoint-grad)"/>
+          <circle cx="12" cy="9" r="3" fill="#ffffff" />
+        </svg>
+        <div style="
+          position: absolute;
+          top: -10px;
+          background-color: #ffffff;
+          color: #1e293b;
+          font-weight: 800;
+          font-size: 9px;
+          padding: 2.5px 6.5px;
+          border-radius: 20px;
+          border: 1.5px solid #005BE3;
+          box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+          white-space: nowrap;
+          pointer-events: none;
+        ">
+          ${value !== null ? value.toFixed(0) : "-"}
+        </div>
+      </div>
+    `,
+    iconSize: [44, 44],
+    iconAnchor: [22, 38],
+    popupAnchor: [0, -36],
+  });
+};
+
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON), { ssr: false });
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false });
 
 export type MapDataType = "aod" | "pm25-est" | "pm25-pred";
 
@@ -286,6 +326,35 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
           fetchByDateUrl={fetchByDateUrl}
           maxFutureDays={maxFutureDays}
         />
+        {dataType === "pm25-pred" && geoData && geoData.features.map((feature, index) => {
+          if (feature.geometry.type !== "Point") return null;
+          const coords = feature.geometry.coordinates;
+          const latlng = L.latLng(coords[1], coords[0]);
+          const value = feature.properties?.pm25_value ?? null;
+          const name = (feature.properties as any)?.station_name ?? "Stasiun";
+          const icon = createModernPinpoint(value, name);
+
+          return (
+            <Marker key={index} position={latlng} icon={icon}>
+              <Popup>
+                <div style={{ fontFamily: "var(--font-poppins)", padding: "4px", color: "#1f2937" }}>
+                  <div style={{ fontWeight: 800, fontSize: "14px", marginBottom: "2px" }}>Stasiun: {name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</div>
+                  <div style={{ fontWeight: 750, fontSize: "13px", color: "#4b5563", marginBottom: "6px" }}>Prediksi PM2.5: {value !== null ? `${value.toFixed(1)} µg/m³` : "Tidak tersedia"}</div>
+                  <div style={{ color: "white", fontWeight: 800, fontSize: "11px", padding: "4px 8px", borderRadius: "6px", display: "inline-block", backgroundColor: interpolatePM25Color(value) }}>
+                    Kualitas: {
+                      value === null ? "Tidak tersedia"
+                      : value <= 15.4 ? "BAIK"
+                      : value <= 55.4 ? "SEDANG"
+                      : value <= 150.4 ? "TIDAK SEHAT"
+                      : value <= 250.4 ? "SANGAT TIDAK SEHAT"
+                      : "BERBAHAYA"
+                    }
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
         {markerPosition && <Marker position={markerPosition} icon={customIcon} />}
       </MapContainer>
     </div>
