@@ -357,7 +357,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, b
         const cy = ((bbox[3] - coords[1]) / (bbox[3] - bbox[1])) * height;
         
         ctx.fillStyle = color; 
-        ctx.globalAlpha = 0.85;
+        ctx.globalAlpha = 1.0;
         // Draw circles so they blend naturally under the blur filter and look round rather than boxy
         ctx.beginPath();
         ctx.arc(cx, cy, (scale * 1.35) / 2, 0, 2 * Math.PI);
@@ -513,7 +513,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, b
         [bbox[1], bbox[0]],
         [bbox[3], bbox[2]],
       ];
-      staticLayerRef.current = L.imageOverlay(newImageUrl, newBounds, { opacity: 0.85, interactive: true, zIndex: 1000 }).addTo(map);
+      staticLayerRef.current = L.imageOverlay(newImageUrl, newBounds, { opacity: 1.0, interactive: true, zIndex: 1000 }).addTo(map);
 
       map.on("mousemove", handleMouseMove);
 
@@ -605,7 +605,7 @@ const GenericHeatMapLayer: React.FC<HeatMapLayerProps> = ({ dataType, geoData, b
         <GradientLegend dataType={dataType} />
       </div>
 
-      {imageUrl && bounds && <ImageOverlay url={imageUrl} bounds={bounds} opacity={0.85} interactive={true} zIndex={1000} />}
+      {imageUrl && bounds && <ImageOverlay url={imageUrl} bounds={bounds} opacity={1.0} interactive={true} zIndex={1000} />}
     </>
   );
 };

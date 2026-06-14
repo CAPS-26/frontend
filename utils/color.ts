@@ -1,5 +1,5 @@
 export const interpolateAODColor = (value: number): string => {
-  const opacity = 0.85;
+  const opacity = 1.0;
 
   if (value >= 4.0) {
     return `rgba(255, 0, 0, ${opacity})`; 
@@ -31,7 +31,7 @@ export const interpolateAODColor = (value: number): string => {
 };
 
 export const interpolatePM25Color = (value: number | null): string => {
-  const opacity = 0.85;
+  const opacity = 1.0;
   if (value === null || isNaN(value)) {
     return `rgba(160, 174, 192, ${opacity})`; 
   }
@@ -61,7 +61,7 @@ export const interpolatePM25Color = (value: number | null): string => {
 };
 
 export const staticPM25Color = (value: number | null): string => {
-  const opacity = 0.7;
+  const opacity = 1.0;
   if (value === null || isNaN(value)) {
     return `rgba(160, 174, 192, ${opacity})`; // untuk data yg gaada
   }

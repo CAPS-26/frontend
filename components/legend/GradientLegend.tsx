@@ -6,20 +6,20 @@ interface GradientLegendProps {
 
 const GradientLegend: React.FC<GradientLegendProps> = ({ dataType }) => {
   const aodColors = [
-    "rgba(128, 0, 128, 0.85)", // Ungu (<0)
-    "rgba(0, 0, 255, 0.85)", // Biru
-    "rgba(0, 128, 0, 0.85)", // Hijau
-    "rgba(255, 255, 0, 0.85)", // Kuning
-    "rgba(255, 165, 0, 0.85)", // Jingga
-    "rgba(255, 0, 0, 0.85)", // Merah (>4)
+    "rgba(128, 0, 128, 1.0)", // Ungu (<0)
+    "rgba(0, 0, 255, 1.0)", // Biru
+    "rgba(0, 128, 0, 1.0)", // Hijau
+    "rgba(255, 255, 0, 1.0)", // Kuning
+    "rgba(255, 165, 0, 1.0)", // Jingga
+    "rgba(255, 0, 0, 1.0)", // Merah (>4)
   ];
 
   const pm25Colors = [
-    "rgba(0, 204, 0, 0.85)", // Hijau (0-15.4)
-    "rgba(1, 51, 255, 0.85)", // Biru (15.5-55.4)
-    "rgba(255, 201, 0, 0.85)", // Kuning (55.5-150.4)
-    "rgba(255, 0, 0, 0.85)", // Merah (150.5-250.4)
-    "rgba(34, 34, 34, 0.85)", // Hitam (>250.4)
+    "rgba(0, 204, 0, 1.0)", // Hijau (0-15.4)
+    "rgba(1, 51, 255, 1.0)", // Biru (15.5-55.4)
+    "rgba(255, 201, 0, 1.0)", // Kuning (55.5-150.4)
+    "rgba(255, 0, 0, 1.0)", // Merah (150.5-250.4)
+    "rgba(34, 34, 34, 1.0)", // Hitam (>250.4)
   ];
 
   const gradient = dataType === "aod" ? `linear-gradient(to right, ${aodColors.join(", ")})` : `linear-gradient(to right, ${pm25Colors.join(", ")})`;

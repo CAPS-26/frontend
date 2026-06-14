@@ -20,6 +20,9 @@ export async function POST(request: Request) {
           cache: "no-store",
         });
         if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json([]);
+      }
       const err = await response.json().catch(() => ({ detail: "Server error" }));
       return NextResponse.json(err, { status: response.status });
     }

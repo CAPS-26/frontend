@@ -187,6 +187,25 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
   const leftClass = isSplitView ? "w-full" : "lg:col-span-7 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm";
   const rightClass = isSplitView ? "w-full" : "lg:col-span-5 flex flex-col gap-6";
 
+  const getHeroCardClasses = (value: number | null): string => {
+    if (value === null || isNaN(value)) {
+      return "bg-grey-gradient shadow-gray-500/15 text-white";
+    }
+    if (value <= 15.4) {
+      return "bg-green-gradient shadow-green-500/15 text-white";
+    }
+    if (value <= 55.4) {
+      return "bg-blue-gradient shadow-blue-500/15 text-white";
+    }
+    if (value <= 150.4) {
+      return "bg-yellow-gradient shadow-yellow-500/15 text-white";
+    }
+    if (value <= 250.4) {
+      return "bg-red-gradient shadow-red-500/15 text-white";
+    }
+    return "bg-black-gradient shadow-gray-950/15 text-white";
+  };
+
   return (
     <div className={containerClass}>
       <div className={contentClass}>
@@ -327,8 +346,8 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
         {showRightPanel && (
           <div className={rightClass}>
             
-            {/* Air quality hero card with blue gradient */}
-            <div className="bg-blue-gradient text-white rounded-2xl p-6 shadow-lg shadow-blue-500/15 flex flex-col gap-6">
+            {/* Air quality hero card with dynamic color gradient */}
+            <div className={`${getHeroCardClasses(selectedPMValue)} rounded-2xl p-6 shadow-lg flex flex-col gap-6`}>
               <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b border-white/10">
                 {!hasData ? (
                   <div className="w-full flex items-center justify-center gap-3 py-4">
