@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/navbar/Navbar";
-import styles from "../../styles/pm25act.module.css";
 import { FiChevronRight } from "react-icons/fi";
 import { staticPM25Color } from "@/utils/color";
 import { BoundaryGeoJSONData, StationData, WeatherData, PM25Data } from "@/app/types";
@@ -33,9 +32,9 @@ const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON)
 const Calendar = dynamic(() => import("@/components/calendar/Calendar"), {
   ssr: false,
   loading: () => (
-    <div className="h-full w-full flex items-center justify-center">
-      <div className={styles.spinner}></div>
-      <span style={{ color: "black" }}>Memuat kalender...</span>
+    <div className="h-full w-full flex flex-col gap-3 items-center justify-center bg-slate-50/50 p-6">
+      <div className="w-8 h-8 rounded-full border-4 border-primary-blue/30 border-t-primary-blue animate-spin" />
+      <span className="text-xs font-semibold text-gray-500">Memuat kalender...</span>
     </div>
   ),
 });
@@ -88,34 +87,36 @@ const MapComponent = React.memo(
 
         if (station) {
           const popupContent = `
-            <div class="font-bold">Stasiun: ${formatStationName(station.station_name)}</div>
-            <div class="font-bold">PM2.5: ${pm25Value !== null && !isNaN(pm25Value) ? pm25Value.toFixed(2) : "Tidak tersedia"}</div>
-            <div class="text-white font-semibold px-2 py-1 rounded mt-1 mb-1 inline-block" style="background-color: ${staticPM25Color(pm25Value)}">
+            <div style="font-family: var(--font-poppins); padding: 4px; color: #1f2937;">
+              <div style="font-weight: 800; font-size: 14px; margin-bottom: 2px;">Stasiun: ${formatStationName(station.station_name)}</div>
+              <div style="font-weight: 700; font-size: 13px; color: #4b5563; margin-bottom: 6px;">PM2.5: ${pm25Value !== null && !isNaN(pm25Value) ? `${pm25Value.toFixed(1)} µg/m³` : "Tidak tersedia"}</div>
+              <div style="color: white; font-weight: 850; font-size: 11px; padding: 4px 8px; border-radius: 6px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.1); background-color: ${staticPM25Color(pm25Value)}">
+                ${
+                  pm25Value === null || isNaN(pm25Value)
+                    ? "Kualitas: Tidak tersedia"
+                    : pm25Value <= 15.4
+                    ? "Kualitas: BAIK"
+                    : pm25Value <= 55.4
+                    ? "Kualitas: SEDANG"
+                    : pm25Value <= 150.4
+                    ? "Kualitas: TIDAK SEHAT"
+                    : pm25Value <= 250.4
+                    ? "Kualitas: SANGAT TIDAK SEHAT"
+                    : "Kualitas: BERBAHAYA"
+                }
+              </div>
               ${
-                pm25Value === null || isNaN(pm25Value)
-                  ? "Kualitas: Tidak tersedia"
-                  : pm25Value <= 15.4
-                  ? "Kualitas: BAIK"
-                  : pm25Value <= 55.4
-                  ? "Kualitas: SEDANG"
-                  : pm25Value <= 150.4
-                  ? "Kualitas: TIDAK SEHAT"
-                  : pm25Value <= 250.4
-                  ? "Kualitas: SANGAT TIDAK SEHAT"
-                  : "Kualitas: BERBAHAYA"
+                weather
+                  ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #f3f4f6; font-size: 11px; color: #4b5563; line-height: 1.5;">
+                     <div>Suhu: <strong>${weather.temperature?.toFixed(1) ?? "-"} °C</strong></div>
+                     <div>Curah hujan: <strong>${weather.precipitation?.toFixed(1) ?? "-"} mm</strong></div>
+                     <div>Kelembaban: <strong>${weather.humidity?.toFixed(0) ?? "-"} %</strong></div>
+                     <div>Arah angin: <strong>${weather.wind_dir?.toFixed(0) ?? "-"}°</strong></div>
+                     <div>Kec. angin: <strong>${weather.wind_speed?.toFixed(1) ?? "-"} m/s</strong></div>
+                   </div>`
+                  : `<div style="margin-top: 8px; font-size: 11px; font-style: italic; color: #9ca3af;">Data cuaca tidak tersedia</div>`
               }
             </div>
-            ${
-              weather
-                ? `<div class="mt-2 text-sm">
-                   <div>Suhu: ${weather.temperature.toFixed(1)} °C</div>
-                   <div>Curah hujan: ${weather.precipitation.toFixed(1)} mm</div>
-                   <div>Kelembaban: ${weather.humidity.toFixed(1)} %</div>
-                   <div>Arah angin: ${weather.wind_dir.toFixed(1)}°</div>
-                   <div>Kec. angin: ${weather.wind_speed.toFixed(1)} m/s</div>
-                 </div>`
-                : `<div class="mt-2 text-sm italic text-gray-500">Data cuaca tidak tersedia</div>`
-            }
           `;
           activeMarkerRef.current.setPopupContent(popupContent);
           activeMarkerRef.current.openPopup();
@@ -143,7 +144,7 @@ const MapComponent = React.memo(
           [-5.9, 107.15],
         ]}
         maxBoundsViscosity={1}
-        className={`h-full w-full ${styles.mapContainer}`}
+        className="h-full w-full relative z-0"
         style={{ height: "100%", width: "100%" }}
         zoomControl={false}
         ref={mapRef}
@@ -168,32 +169,34 @@ const MapComponent = React.memo(
                 }}
               >
                 <Popup>
-                  <div className="font-bold">Stasiun: {formatStationName(station.station_name)}</div>
-                  <div className="font-bold">PM2.5: {pm25Value !== null && !isNaN(pm25Value) ? pm25Value.toFixed(2) : "Tidak tersedia"}</div>
-                  <div className="text-white font-semibold px-2 py-1 rounded mt-1 mb-1 inline-block" style={{ backgroundColor: staticPM25Color(pm25Value) }}>
-                    {pm25Value === null || isNaN(pm25Value)
-                      ? "Kualitas: Tidak tersedia"
-                      : pm25Value <= 15.4
-                      ? "Kualitas: BAIK"
-                      : pm25Value <= 55.4
-                      ? "Kualitas: SEDANG"
-                      : pm25Value <= 150.4
-                      ? "Kualitas: TIDAK SEHAT"
-                      : pm25Value <= 250.4
-                      ? "Kualitas: SANGAT TIDAK SEHAT"
-                      : "Kualitas: BERBAHAYA"}
-                  </div>
-                  {weather ? (
-                    <div className="mt-2 text-sm">
-                      <div>Suhu: {weather.temperature.toFixed(1)} °C</div>
-                      <div>Curah hujan: {weather.precipitation.toFixed(1)} mm</div>
-                      <div>Kelembaban: {weather.humidity.toFixed(1)} %</div>
-                      <div>Arah angin: {weather.wind_dir.toFixed(1)}°</div>
-                      <div>Kec. angin: {weather.wind_speed.toFixed(1)} m/s</div>
+                  <div style={{ fontFamily: "var(--font-poppins)", padding: "4px", color: "#1f2937" }}>
+                    <div style={{ fontWeight: 800, fontSize: "14px", marginBottom: "2px" }}>Stasiun: {formatStationName(station.station_name)}</div>
+                    <div style={{ fontWeight: 700, fontSize: "13px", color: "#4b5563", marginBottom: "6px" }}>PM2.5: {pm25Value !== null && !isNaN(pm25Value) ? `${pm25Value.toFixed(1)} µg/m³` : "Tidak tersedia"}</div>
+                    <div style={{ color: "white", fontWeight: 850, fontSize: "11px", padding: "4px 8px", borderRadius: "6px", display: "inline-block", boxShadow: "0 1px 2px rgba(0,0,0,0.1)", backgroundColor: staticPM25Color(pm25Value) }}>
+                      {pm25Value === null || isNaN(pm25Value)
+                        ? "Kualitas: Tidak tersedia"
+                        : pm25Value <= 15.4
+                        ? "Kualitas: BAIK"
+                        : pm25Value <= 55.4
+                        ? "Kualitas: SEDANG"
+                        : pm25Value <= 150.4
+                        ? "Kualitas: TIDAK SEHAT"
+                        : pm25Value <= 250.4
+                        ? "Kualitas: SANGAT TIDAK SEHAT"
+                        : "Kualitas: BERBAHAYA"}
                     </div>
-                  ) : (
-                    <div className="mt-2 text-sm italic text-gray-500">Data cuaca tidak tersedia</div>
-                  )}
+                    {weather ? (
+                      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f3f4f6", fontSize: "11px", color: "#4b5563", lineHeight: 1.5 }}>
+                        <div>Suhu: <strong>{weather.temperature?.toFixed(1) ?? "-"} °C</strong></div>
+                        <div>Curah hujan: <strong>{weather.precipitation?.toFixed(1) ?? "-"} mm</strong></div>
+                        <div>Kelembaban: <strong>{weather.humidity?.toFixed(0) ?? "-"} %</strong></div>
+                        <div>Arah angin: <strong>{weather.wind_dir?.toFixed(0) ?? "-"}°</strong></div>
+                        <div>Kec. angin: <strong>{weather.wind_speed?.toFixed(1) ?? "-"} m/s</strong></div>
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: "8px", fontSize: "11px", fontStyle: "italic", color: "#9ca3af" }}>Data cuaca tidak tersedia</div>
+                    )}
+                  </div>
                 </Popup>
               </Marker>
             );
@@ -217,7 +220,7 @@ const StasiunPM25 = () => {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isClient, setIsClient] = useState(false);
-  const [showInfoPopup, setShowInfoPopup] = useState(false); // State baru untuk popup informasi
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   const createIcon = useCallback((pm25: number | null) => {
     const color = staticPM25Color(pm25);
@@ -237,7 +240,7 @@ const StasiunPM25 = () => {
             font-weight: bold;
             font-size: 14px;
             border: 2px solid #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
           ">
             ${value}
           </div>
@@ -272,7 +275,6 @@ const StasiunPM25 = () => {
 
       if (!pm25Response.ok) throw new Error(`PM2.5 fetch failed: ${pm25Response.status}`);
       const pm25RawText = await pm25Response.text();
-      // const pm25CleanText = pm25RawText.replace(/NaN/g, "null");
       const pm25CleanText = pm25RawText.replace(/NaN/g, "null").replace(/"0"/g, "null");
       const pm25Data = JSON.parse(pm25CleanText);
       if (pm25Data.error) throw new Error(pm25Data.error || "Gagal memuat data PM2.5");
@@ -386,8 +388,6 @@ const StasiunPM25 = () => {
           if (isSplitView && selectedStation && activeMarkerRef.current) {
             activeMarkerRef.current.openPopup();
             console.log(`Popup opened for station: ${selectedStation} after invalidateSize`);
-          } else if (!isSplitView) {
-            console.log("Split view closed, map resized to fullsize");
           }
         }
       }, 300);
@@ -431,8 +431,6 @@ const StasiunPM25 = () => {
             }
           }
         });
-      } else {
-        console.log(`Station ${stationName} not found or map not ready`);
       }
     },
     [stations, mapRef]
@@ -451,8 +449,8 @@ const StasiunPM25 = () => {
       if (prev) {
         setSelectedStation(null);
         activeMarkerRef.current = null;
-        setSelectedDate(new Date()); // Reset ke hari ini
-        fetchRealtimeData(); // Ambil data real-time
+        setSelectedDate(new Date());
+        fetchRealtimeData();
         console.log("Split view closed, resetting selected station, marker, and date to today");
       } else {
         if (!selectedStation) {
@@ -460,7 +458,6 @@ const StasiunPM25 = () => {
           if (defaultStation && mapRef.current) {
             setSelectedStation("bundaran_hi");
             mapRef.current.setView([defaultStation.latitude, defaultStation.longitude], 14);
-            console.log("No station selected, defaulting to bundaran_hi");
             mapRef.current.eachLayer((layer) => {
               if (layer instanceof L.Marker) {
                 const latlng = layer.getLatLng();
@@ -471,8 +468,6 @@ const StasiunPM25 = () => {
                 }
               }
             });
-          } else {
-            console.log("Default station bundaran_hi not found or map not ready");
           }
         }
       }
@@ -480,7 +475,6 @@ const StasiunPM25 = () => {
     });
   }, [selectedStation, stations, mapRef, fetchRealtimeData]);
 
-  // Fungsi baru untuk menangani klik elemen informasi dan tutup popup
   const handleInfoClick = () => {
     setShowInfoPopup(true);
   };
@@ -509,10 +503,10 @@ const StasiunPM25 = () => {
 
   if (!isClient) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="flex flex-col items-center gap-4">
-          <div className={styles.spinner}></div>
-          <span style={{ color: "black" }}>Memuat peta...</span>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-4 border-primary-blue/30 border-t-primary-blue animate-spin" />
+          <span className="text-sm font-semibold text-gray-500">Memuat peta...</span>
         </div>
       </div>
     );
@@ -520,10 +514,10 @@ const StasiunPM25 = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="flex flex-col items-center gap-4">
-          <div className={styles.spinner}></div>
-          <span style={{ color: "black" }}>Memuat data stasiun...</span>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-4 border-primary-blue/30 border-t-primary-blue animate-spin" />
+          <span className="text-sm font-semibold text-gray-500">Memuat data stasiun...</span>
         </div>
       </div>
     );
@@ -534,67 +528,79 @@ const StasiunPM25 = () => {
       <Navbar />
       <div className={`relative min-h-screen w-full flex ${isSplitView ? "flex-row" : "flex-col"}`}>
         {error && (
-          <div className={styles.alert}>
-            <div className={styles.alertContent}>
-              <span className="text-red-500 font-semibold">{error}</span>
-              <button onClick={() => setError(null)} className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">
-                Tutup
-              </button>
-            </div>
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[1200] bg-white border border-red-100 rounded-xl p-4 shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-200">
+            <span className="text-red-500 text-sm font-semibold">{error}</span>
+            <button onClick={() => setError(null)} className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-600 focus:outline-none transition-colors">
+              Tutup
+            </button>
           </div>
         )}
         <div className={`flex w-full h-screen ${isSplitView ? "flex-row" : "flex-col"}`}>
           <div className={`${isSplitView ? "w-1/2" : "w-full"} h-full relative`} ref={containerRef}>
             {memoizedMap}
-            <div className="absolute bottom-[11.5rem] left-4 z-[1000] bg-white p-2 rounded-md shadow-md flex items-center gap-2 cursor-pointer hover:bg-gray-100" onClick={handleInfoClick}>
-              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            
+            {/* Information Button */}
+            <div className="absolute bottom-[13rem] left-4 z-[1000] bg-white/95 backdrop-blur-sm px-3.5 py-2.5 rounded-xl shadow-lg border border-gray-150 flex items-center gap-2 cursor-pointer hover:bg-slate-50 transition-all duration-200" onClick={handleInfoClick}>
+              <svg className="w-4 h-4 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-sm font-semibold text-gray-700">Informasi Data PM2.5 (Aktual)</span>
+              <span className="text-xs font-bold text-gray-700">Informasi Data PM2.5 (Aktual)</span>
             </div>
+            
             {showInfoPopup && (
-              <div className="absolute bottom-[13rem] left-4 bg-white p-4 rounded-md shadow-lg z-[1100] max-w-xs">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-sm font-semibold text-gray-700">Data PM2.5 (Aktual)</h4>
-                  <button className="text-gray-500 hover:text-gray-700" onClick={handleClosePopup}>
+              <div className="absolute bottom-[16.5rem] left-4 bg-white p-4 rounded-xl border border-gray-100 shadow-xl z-[1100] max-w-xs space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex justify-between items-center pb-1 border-b border-gray-50">
+                  <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Data PM2.5 (Aktual)</h4>
+                  <button className="text-gray-400 hover:text-gray-600 font-extrabold text-sm" onClick={handleClosePopup}>
                     ×
                   </button>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Data PM2.5 (Aktual) merupakan data PM2.5 yang didapatkan langsung dari 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta. Data ini memiliki akurasi yang tinggi namun terbatas pada lokasi stasiun.
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Data PM2.5 (Aktual) merupakan data PM2.5 resmi yang diperoleh dari 8 Stasiun Pemantauan Kualitas Udara (SPKU) di Jakarta. Data ini memiliki tingkat akurasi sensor stasiun darat yang tinggi.
                 </p>
               </div>
             )}
-            <div className={styles.legend}>
-              <h4>Indikator PM2.5 (µg/m³)</h4>
-              <div className={styles.legendItem}>
-                <span className={styles.legendColor} style={{ backgroundColor: "#00CC00" }}></span>
-                <span>Baik (0 - 15.4)</span>
-              </div>
-              <div className={styles.legendItem}>
-                <span className={styles.legendColor} style={{ backgroundColor: "#0133FF" }}></span>
-                <span>Sedang (15.5 - 55.4)</span>
-              </div>
-              <div className={styles.legendItem}>
-                <span className={styles.legendColor} style={{ backgroundColor: "#FFC900" }}></span>
-                <span>Tidak Sehat (55.5 - 150.4)</span>
-              </div>
-              <div className={styles.legendItem}>
-                <span className={styles.legendColor} style={{ backgroundColor: "#FF0000" }}></span>
-                <span>Sangat Tidak Sehat (150.5 - 250.4)</span>
-              </div>
-              <div className={styles.legendItem}>
-                <span className={styles.legendColor} style={{ backgroundColor: "#000000" }}></span>
-                <span>Berbahaya (&gt; 250.4)</span>
+
+            {/* Map Legend */}
+            <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-gray-100 max-w-xs space-y-2.5">
+              <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Indikator PM2.5 (µg/m³)</h4>
+              <div className="space-y-1.5">
+                {[
+                  { label: "Baik", range: "0 - 15.4", color: "#00CC00" },
+                  { label: "Sedang", range: "15.5 - 55.4", color: "#0133FF" },
+                  { label: "Tidak Sehat", range: "55.5 - 150.4", color: "#FFC900" },
+                  { label: "Sangat Tidak Sehat", range: "150.5 - 250.4", color: "#FF0000" },
+                  { label: "Berbahaya", range: "> 250.4", color: "#000000" },
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-2.5">
+                    <span 
+                      className="w-3.5 h-3.5 rounded-full border border-black/10 flex-shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs font-semibold text-gray-600">
+                      {item.label} <span className="text-gray-400 font-normal">({item.range})</span>
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
+          
+          {/* Calendar splitscreen side */}
           {isSplitView && selectedStation && (
-            <div className="w-1/2 h-full overflow-auto">
-              <Calendar location={selectedStation} isSplitView={true} showRightPanel={false} splitViewContainer={styles.splitViewContainer} onStationChange={handleStationChange} onDateChange={handleDateChange} />
+            <div className="w-1/2 h-full overflow-auto bg-slate-50 border-l border-gray-100 p-6">
+              <Calendar location={selectedStation} isSplitView={true} showRightPanel={false} onStationChange={handleStationChange} onDateChange={handleDateChange} />
             </div>
           )}
-          <button onClick={toggleSplitView} className={`${styles.toggleButton} ${isSplitView ? styles.splitView : ""}`} title={isSplitView ? "Tutup Kalender" : "Buka Kalender"}>
+          
+          {/* Splitscreen collapse/expand button */}
+          <button 
+            onClick={toggleSplitView} 
+            className={`absolute top-1/2 -translate-y-1/2 bg-primary-blue hover:bg-primary-dark text-white p-3 rounded-full z-[1000] shadow-lg hover:scale-110 transition-all duration-200 flex items-center justify-center ${
+              isSplitView ? "left-[calc(50%-20px)]" : "right-4"
+            }`}
+            title={isSplitView ? "Tutup Kalender" : "Buka Kalender"}
+          >
             <FiChevronRight size={20} className={isSplitView ? "" : "rotate-180"} />
           </button>
         </div>

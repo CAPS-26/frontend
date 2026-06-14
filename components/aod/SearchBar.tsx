@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { OpenStreetMapProvider } from "leaflet-geosearch";
 import * as L from "leaflet";
-import styles from "@/styles/searchbar.module.css";
 import { BoundaryGeoJSONData } from "@/app/types";
 import * as turf from "@turf/turf";
 
@@ -163,11 +162,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
 
   // Render UI Komponen SearchBar
   return (
-    <div className={styles.searchBarContainer}>
-      <label htmlFor="searchInput" className={styles.searchLabel}>
+    <div className="flex flex-col gap-2.5 bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 w-72 mt-[160px] relative">
+      <label htmlFor="searchInput" className="text-xs font-bold text-gray-400 uppercase tracking-wider">
         Cari Lokasi
       </label>
-      <div className={styles.searchInputContainer}>
+      <div className="flex items-center gap-2 text-black">
         {/* input text dengan event onChange memicu handleSearchChange. */}
         <input
           type="text"
@@ -175,7 +174,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
           placeholder="Cari lokasi di Jakarta..."
           value={searchQuery}
           onChange={handleSearchChange}
-          className={styles.searchInput}
+          className="px-3 py-2 w-full text-sm font-semibold text-gray-750 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue transition-all"
           ref={inputRef}
           onKeyDown={(e) => {
             e.stopPropagation();
@@ -186,7 +185,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
           }}
         />
         <button
-          className={styles.searchButton}
+          className="px-4 py-2 text-xs font-bold bg-primary-blue hover:bg-primary-dark text-white rounded-lg transition-colors focus:outline-none"
           onClick={() => {
             if (searchQuery && typeof window !== "undefined") {
               const provider = new OpenStreetMapProvider();
@@ -221,14 +220,27 @@ const SearchBar: React.FC<SearchBarProps> = ({ updateMarker, mapRef, boundaryDat
           Cari
         </button>
       </div>
-      <button className={`${styles.searchButton} mt-2`} onClick={handleReset}>
+      <button 
+        className="w-full py-1.5 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors focus:outline-none" 
+        onClick={handleReset}
+      >
         Reset
       </button>
-      {error && <div className={styles.searchError}>{error}</div>}
+      
+      {error && (
+        <div className="absolute top-[100%] left-0 w-full bg-red-50 border border-red-100 text-red-600 px-3 py-2 rounded-xl mt-2 text-xs font-semibold shadow-md z-[1100]">
+          {error}
+        </div>
+      )}
+      
       {searchResults.length > 0 && (
-        <div className={styles.searchResults}>
+        <div className="absolute top-[100%] left-0 w-full bg-white border border-gray-100 rounded-xl shadow-xl mt-2 max-h-60 overflow-y-auto z-[1100] py-1">
           {searchResults.map((result, index) => (
-            <div key={index} className={styles.searchResultItem} onClick={() => handleSearchSelect(result)}>
+            <div 
+              key={index} 
+              className="px-4 py-2.5 text-xs text-gray-700 hover:bg-slate-50 cursor-pointer transition-colors" 
+              onClick={() => handleSearchSelect(result)}
+            >
               {result.label}
             </div>
           ))}

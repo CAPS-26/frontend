@@ -9,6 +9,7 @@ import { GeoJSONData, BoundaryGeoJSONData } from "@/app/types";
 import * as GeoJSONTypes from "geojson";
 import * as L from "leaflet";
 import { getBoundaryStyle } from "@/utils/map";
+import * as turf from "@turf/turf";
 import { interpolateAODColor, interpolatePM25Color } from "@/utils/color";
 
 const customIcon = L.icon({
@@ -215,6 +216,27 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
               layer.on({
                 mouseover: (e: L.LeafletMouseEvent) => {
                   if (error) return;
+
+                  const turfPoint = turf.point([e.latlng.lng, e.latlng.lat]);
+                  const dataFeature = geoData?.features.find((f: GeoJSONTypes.Feature) => {
+                    if (!f.geometry) return false;
+                    try {
+                      if (f.geometry.type === "Point") {
+                        return false;
+                      }
+                      return turf.booleanPointInPolygon(turfPoint, f.geometry as any);
+                    } catch {
+                      return false;
+                    }
+                  });
+
+                  const value = dataFeature ? (dataType === "aod" ? dataFeature.properties.aod_value ?? null : dataFeature.properties.pm25_value ?? null) : null;
+                  
+                  // Skip highlighting and tooltips if there's no valid data (null or zero)
+                  if (value === null || value <= 0) {
+                    return;
+                  }
+
                   layer.setStyle({
                     weight: 1.2,
                     color: "#1a4971",
@@ -222,18 +244,6 @@ const GenericMap: React.FC<GenericMapProps> = ({ dataType, fetchUrl, fetchByDate
                   });
                   layer.bringToFront();
 
-                  const dataFeature = geoData?.features.find((f: GeoJSONTypes.Feature) => {
-                    if (!f.geometry) return false;
-                    try {
-                      const point = L.latLng(e.latlng);
-                      const isInside = L.geoJSON(f.geometry).getBounds().contains(point);
-                      return isInside;
-                    } catch {
-                      return false;
-                    }
-                  });
-
-                  const value = dataFeature ? (dataType === "aod" ? dataFeature.properties.aod_value ?? null : dataFeature.properties.pm25_value ?? null) : null;
                   const kelurahanName = feature.properties?.NAMOBJ || "Lokasi Tidak Dikenal";
 
                   if (tooltipRef.current) {

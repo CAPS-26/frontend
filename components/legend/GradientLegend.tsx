@@ -1,5 +1,4 @@
 import React from "react";
-import styles from "@/styles/heatmap.module.css";
 
 interface GradientLegendProps {
   dataType: "aod" | "pm25-est" | "pm25-pred";
@@ -26,9 +25,9 @@ const GradientLegend: React.FC<GradientLegendProps> = ({ dataType }) => {
   const gradient = dataType === "aod" ? `linear-gradient(to right, ${aodColors.join(", ")})` : `linear-gradient(to right, ${pm25Colors.join(", ")})`;
 
   return (
-    <div className={styles.gradientLegend}>
-      <div className={styles.gradientBar} style={{ background: gradient }} />
-      <div className={styles.gradientLabels}>
+    <div className="mt-2 text-gray-700">
+      <div className="h-3 w-56 rounded-full" style={{ background: gradient }} />
+      <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-1.5 uppercase tracking-wider">
         {dataType === "aod" ? (
           <>
             <span>0 (Rendah)</span>
@@ -41,24 +40,29 @@ const GradientLegend: React.FC<GradientLegendProps> = ({ dataType }) => {
           </>
         )}
       </div>
-      <div className={styles.legendLabels}>
+      <div className="mt-3.5 space-y-1.5">
         {dataType === "aod" ? (
           <></>
         ) : (
           <>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+              <span className="w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: "#00CC00" }} />
               <span>Baik (0 - 15.4)</span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+              <span className="w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: "#0133FF" }} />
               <span>Sedang (15.5 - 55.4)</span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+              <span className="w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: "#FFC900" }} />
               <span>Tidak Sehat (55.5 - 150.4)</span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+              <span className="w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: "#FF0000" }} />
               <span>Sangat Tidak Sehat (150.5 - 250.4)</span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+              <span className="w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: "#222222" }} />
               <span>Berbahaya (&gt;250.4)</span>
             </div>
           </>

@@ -98,3 +98,38 @@ main {
   color: #555 !important; /* Sedikit lebih terang untuk teks lokasi */
   font-size: 0.9em !important;
 }
+
+/* Custom Map Tooltip Styling */
+.customTooltip {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
+  font-family: 'Poppins', sans-serif !important;
+  pointer-events: none !important;
+  min-width: 130px;
+}
+
+.customTooltip .kelurahanName {
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  color: #1e293b !important;
+  text-align: center !important;
+  margin-bottom: 5px !important;
+}
+
+.customTooltip .valueContainer {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.customTooltip .valueCircle {
+  padding: 4px 10px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  line-height: 1.3 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}

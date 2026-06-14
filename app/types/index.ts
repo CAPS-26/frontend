@@ -45,11 +45,11 @@ export interface PM25Data {
 // digunakan untuk data cuaca
 export interface WeatherData {
   id: number;
-  temperature: number;
-  precipitation: number;
-  humidity: number;
-  wind_dir: number;
-  wind_speed: number;
+  temperature: number | null;
+  precipitation: number | null;
+  humidity: number | null;
+  wind_dir: number | null;
+  wind_speed: number | null;
   station_name: string;
   latitude: number;
   longitude: number;
