@@ -65,7 +65,7 @@ const Calendar: React.FC<CalendarProps> = ({ location, isSplitView = false, show
 
   // Collect PM2.5 data from all queries
   const pm25Data = useMemo(() => {
-    const all: PM25Data[] = [...realtimeData];
+    const all: PM25Data[] = Array.isArray(realtimeData) ? [...realtimeData] : [];
     for (const r of historicalResults) {
       if (r.data && Array.isArray(r.data)) all.push(...r.data);
     }

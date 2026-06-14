@@ -588,7 +588,7 @@ const StasiunPM25 = () => {
           
           {/* Calendar splitscreen side */}
           {isSplitView && selectedStation && (
-            <div className="w-1/2 h-full overflow-auto bg-slate-50 border-l border-gray-100 p-6">
+            <div className="w-1/2 h-full overflow-auto bg-slate-50 border-l border-gray-100 px-6 pb-6 pt-20">
               <Calendar location={selectedStation} isSplitView={true} showRightPanel={false} onStationChange={handleStationChange} onDateChange={handleDateChange} />
             </div>
           )}
